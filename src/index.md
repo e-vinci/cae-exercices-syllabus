@@ -1,8 +1,17 @@
 ---
 layout: home
-title: 'Eleventy Duo'
+title: 'Cours Spring 2024'
 ---
 
 # Hello World
 
-Eleventy Duo is a minimal and beautiful Eleventy theme for personal blogs. Checkout the [project's github repo](https://github.com/yinkakun/eleventy-duo) for more info.
+Ce site reprend le matériel de cours pour le cours de seconde année d'introduction à Spring.
+
+Les différentes fiches sont ci-dessous.
+
+## Enseignants
+
+- Sébastien Strebelle (Lead)
+- Jean-Sébastien Derieuw
+- Martin Van Aken
+
