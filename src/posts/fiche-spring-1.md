@@ -282,18 +282,77 @@ Le paramètre est supposé toujours présent - s'il est optionel il faut le spé
 
 On peut maintenant appeller l'url avec ou sans paramètre.
 
+Pour information, il est également possible d'écrire ceci avec un [Optional](https://www.baeldung.com/spring-request-param#1-using-java-8-optional)
+
 ## Au delà du navigateur
 
 Il est possible de tester notre endpoint de différente manières - la plus simple étant via la ligne de commande avec curl:
-
 
 ```bash
 > curl localshot:8080/hello/?name=Leila
 {"message":"Hello Leila"}
 ```
 
+On peut également créer un ficher de test dans Intellij, dans le folder src/test/ nommé hello.http:
 
 
+```http
+@baseUrl = http://localhost:8080
+
+### Get the standard message
+GET {{baseUrl}}/hello/
+
+### Get the custom message
+GET {{baseUrl}}/hello/?name=Sarah
+```
+
+Une fois le fichier sauvegardé il est possible de lancer ces test avec un bouton de droite > Run All
+
+Intellij va alors exécuter chaque requête présente et sauvegarder les résultats dans des fichiers json. L'avantage sur les méthodes manuelles est que quand l'application devient plus complexe, ces éléments ne doivent pas être réecrit à chaque fois.
+
+Mieux encore il est possible de valider les résultats:
+
+```http
+@baseUrl = http://localhost:8080
+
+### Get the standard message
+GET {{baseUrl}}/hello/
+
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+
+    client.test("Response content-type is json", function() {
+        var type = response.contentType.mimeType;
+        client.assert(type === "application/json", "Expected 'application/json' but received '" + type + "'");
+    });
+
+    client.test("No parameters returns Hello World", function() {
+        var body = response.body
+        console.log(body)
+        client.assert(response.body.message == "Hello World", "Cannot find 'World' in body");
+    });
+%}
+
+### Get the custom message
+GET {{baseUrl}}/hello/?name=Sarah
+
+> {%
+    client.test("Name parameters returns proper name", function() {
+        var body = response.body
+        console.log(body)
+        client.assert(response.body.message == "Hello Sarah", "Cannot find 'Sarah' in body");
+    });
+%}
+```
+
+Ie dans l'ordre:
+- Vérifier que la réponse HTTP est bien 200 (donc qu'il n'y a pas d'erreur)
+- Vérifier que l'on renvoie bien du json
+- Vérifier que ce que l'on recoit est ce qui est attendu (à savoir "Hello World" ou "Hello /name/" si le paramètre est fourni.)
+
+Le concept ici est celui de Tests Unitaires que vous avez sans doute déjà vu (via JUnit ou autre): on fait un appel avec des paramètres fixé et on vérifie que le résultat est confirme à la spécification.
 
 ## Controllers et Services
 
@@ -301,4 +360,5 @@ Il est possible de tester notre endpoint de différente manières - la plus simp
 
 - Pizza controller
 
+## Exercice récapitulatif
 
