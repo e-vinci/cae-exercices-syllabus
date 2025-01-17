@@ -312,6 +312,7 @@ Intellij va alors exécuter chaque requête présente et sauvegarder les résult
 
 Mieux encore il est possible de valider les résultats:
 
+{% raw  %}
 ```http
 @baseUrl = http://localhost:8080
 
@@ -346,6 +347,7 @@ GET {{baseUrl}}/hello/?name=Sarah
     });
 %}
 ```
+{% endraw %}
 
 Ie dans l'ordre:
 - Vérifier que la réponse HTTP est bien 200 (donc qu'il n'y a pas d'erreur)
