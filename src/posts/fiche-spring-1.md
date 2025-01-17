@@ -152,7 +152,7 @@ La lecture du terminal et des erreurs dans le navigateur est une compétence cri
 
 Ceci est un bon moment pour commiter/pusher votre projet sur un repo github avant de poursuivre.
 
-### L'IDE est vous
+### L'IDE et vous
 
 Intellij nous aide énormément ici - et c'est le but de ces outils ! Gardez toute fois à l'esprit de ne pas trop dépendre d'une "magie" potentiellement incomprise. 
 
@@ -284,7 +284,7 @@ On peut maintenant appeller l'url avec ou sans paramètre.
 
 Pour information, il est également possible d'écrire ceci avec un [Optional](https://www.baeldung.com/spring-request-param#1-using-java-8-optional)
 
-## Au delà du navigateur
+## Side: Au delà du navigateur
 
 Il est possible de tester notre endpoint de différente manières - la plus simple étant via la ligne de commande avec curl:
 
@@ -354,11 +354,40 @@ Ie dans l'ordre:
 
 Le concept ici est celui de Tests Unitaires que vous avez sans doute déjà vu (via JUnit ou autre): on fait un appel avec des paramètres fixé et on vérifie que le résultat est confirme à la spécification.
 
-## Controllers et Services
+## Un second endpoint
 
-## Renvoyer des données
+Notre service va en plus du endpoint /hello fournir une liste de citations sur le endpoint /quotes.
+Une citation a un titre et un auteur:
 
-- Pizza controller
+> No one returns from a long journey the same person they were before.",
+> - Zen Proverb
+
+Notre service va renvoyer 10 quotes quand appelé.
+
+### Controllers
+
+Pour aller au plus simple, nous pouvons déjà créer un Controller et le minimum nécessaire pour tester:
+
+```java
+@RestController
+@RequestMapping("/quotes")
+public class QuotesController {
+    @GetMapping("/")
+    public List all() {
+        return new ArrayList<>();
+    }
+}
+```
+
+Ceci devrait déjà être testable (navigateur, curl ou encore mieux ajouter un quotes.http pour les tests) - quel devrait être le résultat ?
+
+### Modèles
+
+
+### Services et injection de dépendances
+### Renvoyer des données
 
 ## Exercice récapitulatif
+
+Faire pareil avec un autre modèle + un filtre (ex sur des lieux ou personnes)
 
