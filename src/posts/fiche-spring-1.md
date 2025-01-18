@@ -464,17 +464,80 @@ public class QuotesService {
 }
 ```
 
-Cet élément est une simple classe Java avec une ou plusieurs méthode, avec juste l'annotation Service. Nous allons voir son utilité dans un instant.
+Cet élément est une simple classe Java avec une ou plusieurs méthodes, avec juste l'annotation Service. Nous allons voir son utilité dans un instant.
 
 Reprenons notre QuotesController pour utiliser le service:
 
+```java
+@RestController
+@RequestMapping("/quotes")
+public class QuotesController {
+    private final QuotesService quotesService;
 
+    public QuotesController(QuotesService  quotesService) {
+        this.quotesService = quotesService;
+    }
+    @GetMapping("/")
+    public Iterable<Quote> all() {
+        return quotesService.getAllQuotes();
+    }
+}
+```
 
+On crée un attribute "quotesService" dans le controller, initialisé dans le constructeur et... c'est tout.
 
+Grâce aux différentes annotations (@Service, @Controller), spring va automatiquement créer les instances nécessaires de QuoteController et QuoteService, et s'assurer que l'instance de QuoteService est bien passée au QuotesController à la création.
+Retour à /quotes dans le navigateur pour vérifier que l'on voit bien les différentes Quote en JSON.
 
-### Renvoyer des données
+### Récapitulatif Spring
 
-## Exercice récapitulatif
+Durant cette première séance, on a déjà vu pas mal d'avantage du framework:
 
-Faire pareil avec un autre modèle + un filtre (ex sur des lieux ou personnes)
+- Injection de dépendance: On peut créer un ensemble de controllers, services ou autres (on va voir un exemple supplémentaire avec des repository la semaine prochaine) et laisser Spring s'occuper des dépendance.
+- Serialisation: On travaille avec des objets java standard (Quote) et les framework les convertis en JSON quand nécessaire.
+- On peut "mapper" des méthodes avec des urls et récupérer facilement les paramètres pour s'en servir dans le code.
+
+Au passage on a vu avec Lombok comment écrires des modèles en quelques lignes.
+
+## Exercice complémentaire
+
+Pour récapituler tout ceci, vous allez créer un nouveau endpoint qui renvoie une liste de restaurant.
+
+Un restaurant a:
+- Un nom
+- Un type de cuisine
+
+L'url /restaurants doit renvoyer 10 restaurants.
+Il est possible de passer un paramètre "cuisine" - le endpoint ne doit alors renvoyer que les restaurants de ce type
+
+/restaurants?cuisine=Indien
+
+Il vous faut donc un modèle, un service et un controller. La logique est exactement la même que pour les exercices précédents.
+
+Pour vous aider voici quelques données d'exemple:
+
+```java
+String[][] restaurants = {
+    {"Comme Chez Soi", "Française"},
+    {"Le Chalet de la Forêt", "Belge"},
+    {"La Villa Lorraine", "Française"},
+    {"Belga Queen", "Belge"},
+    {"Bia Mara", "Fish"},
+    {"Aux Armes de Bruxelles", "Belge"},
+    {"Noordzee Mer du Nord", "Poisson"},
+    {"Fin de Siècle", "Européenne"},
+    {"Bon Bon", "Française"},
+    {"La Quincaillerie", "Belge"},
+    {"Café Georgette", "Belge"},
+    {"Amadeus", "Ribs"},
+    {"Le Pain Quotidien", "Bio"},
+    {"The Sister Brussels Café", "Végétarienne"},
+    {"Certo", "Italienne"},
+    {"Brugmann", "Française"},
+    {"Chez Léon", "Belge"},
+    {"Yi Chan", "Asiatique"},
+    {"Kamo", "Japonaise"},
+    {"Humus x Hortense", "Végétarienne"}
+};
+```
 
