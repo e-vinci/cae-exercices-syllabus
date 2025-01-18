@@ -385,8 +385,93 @@ Ceci devrait déjà être testable (navigateur, curl ou encore mieux ajouter un 
 
 ### Modèles
 
+Pour gérer ceci nous allons créer un objet qui représente une citation dans un nouveau package models:
+
+```java
+public class Quote {
+    String quote;
+    String author;
+
+    public Quote() {}
+
+    public Quote(String quote, String author) {
+        this.quote = quote;
+        this.author = author;
+    }
+
+    public String getQuote() {
+        return quote;
+    }
+
+    public String getAuthor() {
+        return author;
+    }
+
+    public void setQuote(String quote) {
+        this.quote = quote;
+    }
+
+    public void setAuthor(String author) {
+        this.author = author;
+    }
+}
+```
+
+Le code en question est simple mais verbeux - nous pouvons le rendre beaucoup plus court grâce aux annotation de Lombok - le code suivant est équivalent à celui plus haut:
+
+
+```java
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class Quote {
+    String quote;
+    String author;
+}
+```
+
+Les trois annotations ont chacune un rôle:
+- @Data génère des getters, setters hashCode & equals
+- @AllArgsConstructor génère un constructeur avec tous les attributes de classe
+- @NoArgsConstructor génère un constructeur vide (souvent nécessaire pour la sérialization)
+
+Le code est plus court et surtout plus facile à maintenir - rien n'empêche de créer des setter/getter custom plus tard si le besoin s'en fait sentir.
 
 ### Services et injection de dépendances
+
+Nous pourrions placer le code qui crée et renvoie les quotes directement dans le controller - mais les bonnes pratique sont de séparer les rôles:
+
+- Le controller gère les request/response (récupère des paramètre http, renvoie du JSON, etc) donc les aspect "web"
+- Le service gère la logique métier
+
+(ou à l'inverse, un controller ne s'occupe pas de logique métier et aucun concept "http" ne devraient être présents dans un service).
+
+On va donc créer un QuoteService pour créer et renvoyer nos Quotes dans un package services:
+
+
+```java
+@Service
+public class QuotesService {
+    public List<Quote> getAllQuotes() {
+        Quote[] quotes = {
+                new Quote("Ce qui est écrit n'est pas ce qui est - c'est juste ce qui est écrit", "Anonyme"),
+                new Quote("La vie est un mystère qu'il faut vivre, et non un problème à résoudre", "Gandhi"),
+                // D'autres quotes
+        };
+
+        return List.of(quotes);
+    }
+}
+```
+
+Cet élément est une simple classe Java avec une ou plusieurs méthode, avec juste l'annotation Service. Nous allons voir son utilité dans un instant.
+
+Reprenons notre QuotesController pour utiliser le service:
+
+
+
+
+
 ### Renvoyer des données
 
 ## Exercice récapitulatif

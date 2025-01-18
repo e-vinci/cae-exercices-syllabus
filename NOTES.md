@@ -28,6 +28,8 @@ Pour tester:
 
 ## Qs
 
+Quid git/push ?
+
 Explain:
 - Web (reminder)
 - Maven
