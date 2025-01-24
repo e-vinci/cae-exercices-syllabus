@@ -99,16 +99,198 @@ JPA permettant de se connecter à quasiment n'importe quelle base de données no
 - `datasource-url` donne le "chemin" vers la base de donnée. Ici jdbc (la connection) : h2 (le type de base de données) : mem (en mémoire) : testdb (le nom de notre DB).
 - On trouve après classiquement un user & password
 
-Les deux derniers éléments indiquent à JPA de créer ou droper les tables et schéma en fonction de ce qui est défini dans le code (on va y revenir).
+Les deux derniers éléments indiquent à JPA de créer ou droper (supprimer) les tables et schéma en fonction de ce qui est défini dans le code (on va y revenir).
 
 ## Controller, Service, Model
 
-Drink - as we did the day before
+On va repartir de la même logique que celle utilisée la semaine passée 
+
+### Modèle
+
+Un modèle Drink, représenté de manière simple ici.
+
+
+```java
+public class Drink {
+    public Drink() {}
+
+    public Drink(String name, String description, float price, Boolean alcoholic) {
+        this.name = name;
+        this.description = description;
+        this.price = price;
+        this.alcoholic = alcoholic;
+    }
+
+    private String name;
+    private String description;
+    private float price;
+    private Boolean alcoholic;
+}
+```
+
+A vous de voir si vous générez les getter/setter ou si vous passez par Lombok, ca ne fait pas de différence (pas de `record` par contre, cela ne va pas fonctionner pour la suite).
+
+### Service
+
+Un service pour récupérer "tous" les Drink - au moins quelques un pour tester.
+
+```java
+package be.vinci.cae.fiche2.services;
+
+import be.vinci.cae.fiche2.models.Drink;
+import org.springframework.stereotype.Service;
+
+@Service
+public class DrinksService {
+    public Iterable<Drink> getAllDrinks() {
+        List<Drink> allDrinks = new ArrayList({
+            new Drink("Bloody Mary", "Yum totmatoes", 10.0f, true),
+            new Drink("Mojito", "Yum mint", 8.0f, true),
+            new Drink("Water", "Fresh!", 2.0f, false)
+        });
+
+        return allDrinks;
+    }
+}
+```
+
+### Controller
+
+Comme précédemment - on va se limiter pour l'instant à l'endpoint "all":
+
+```java
+package be.vinci.cae.fiche2.controllers;
+
+import be.vinci.cae.fiche2.models.Drink;
+import be.vinci.cae.fiche2.services.DrinksService;
+
+@RestController
+@RequestMapping("/drinks")
+public class DrinksController {
+    private DrinksService drinksService;
+
+    public DrinksController(DrinksService drinksService) {
+        this.drinksService = drinksService;
+    }
+
+    @GetMapping("/")
+    public Iterable<Drink> getDrinks() {
+        return drinksService.getAllDrinks();
+    }
+}
+```
+
+Temps de tester tout ceci (via le navigateur) - et de créer un petit fichier http pour facilement vérifier les résultats:
+
+```http
+### Read all drinks with File variable
+@baseUrl = http://localhost:8080
+GET {{baseUrl}}/drinks/
+```
+
+Nous sommes plus ou moins de retour au résultat précédent - on va maintenant introduire deux nouveaux concepts.
 
 ## Entities and Repositories
 
+### Entity 
+
+Un "Entity" dans JPA est une classe Java dont les objets ont vocation à être sauvegardés (et lu) dans la base de données.
+
+Donc:
+
+- A une classe (Drink) va correspondre une table dans la base de données
+- A un objet (new Drink()...) va correspondre une ligne dans la table
+
+JPA va nous permettre de faire ces opérations - sans écrire une ligne de SQL (ni DDL, ni DML).
+
+Nous allons reprendre notre modèle "Drink" et en faire une entité.
+
+```java
+@Entity
+@Table(name = "drinks")
+public class Drink {
+    ...
+
+    @Id
+    @GeneratedValue
+    private Long id;
+    ...
+```
+
+Au niveau de la classe, l'annotation `@Entity` indique que le modèle doit correspondre à une table.
+`@Table` permet de spécifier le nom de la table (si on ne le fait pas, JPA a des "convention" qui vont créer le nom basé sur le nom de la classe).
+
+On a rajouté un champs id - dès lors que les "Drink" vont être des lignes dans une base de données, il leur faut une clé primaire. La bonne pratique est de créer un champs dédié pour cela (plutôt que d'utiliser par exemple le nom qui pourrait ne pas être unique).
+
+L'annotation @Id indique que ce champs n'est pas un champs "comme les autres" - mais bien la clé primaire. `@GeneratedValue` indique que c'est la base de donnée qui va mettre cette valeur lorsqu'on fait un INSERT.
+
+Certaines autres annotations peuvent être utilisée sur le différents champs comme par exemple `@Column` - mais ce n'est pas obligatoire. JPA va supposer que chaque champs de l'objet correspond à une colonne, et va adapter les types en conséquences (String vers Varchar, etc):
+
+```java
+@Column(unique=true)
+private String name;
+```
+
+L'exemple ici indique que le nom doit être unique (générant une contrainte dans la base de donnée).
+
+### Repository
+
+Un `Repository` est un type de Component Spring (comme `@Service` et `@Controller` que nous avons déjà rencontré) - le rôle de repository est justement de gérer les interaction entre les objets et la base de donnée.
+
+Nous allons créer notre `DrinksRepository` (dans un package `repositories`)
+
+```java
+@Repository
+public interface DrinksRepository extends CrudRepository<Drink, Long> {
+}
+```
+
+Ce qu'on défini ici est une interface... et en plus il n'y a aucun code (à part une extension) ?
+
+Temps de tester ceci via un nouveau concept au niveau de notre application.
+
+### CommandLineRunner 
+
+On va ouvir l'application que Spring nous a créer (Fiche2JpaApplication chez moi) et rajouter dans une méthode dans la classe:
+
+```java
+...
+@Bean
+public CommandLineRunner demo(DrinksRepository repository) {
+	return (args) -> {
+        System.out.println("Hello!");
+    };
+}
+```
+
+Le [CommandLineRunner](https://docs.spring.io/spring-boot/api/java/org/springframework/boot/CommandLineRunner.html) est une interface qui indique que le code présent doit être éxecuté au lancement de l'application. C'est un option très pratique pour tout un ensemble de traitement - comme charger des données.
+
+Relancez l'application - vous devriez voir le "Hello" dans les logs.
+
 ## Seed data and the ORM
+
+Nous allons adapter le CommandRunner pour insérer des données dans une table - grâce au modèle et au repository.
+
+Un peu de code avant les explications:
+
+```java
+public CommandLineRunner demo(DrinksRepository repository) {
+    return (args) -> {
+        repository.save(new Drink("Bloody Mary", "Yum totmatoes", 10.0f, true));
+        repository.save(new Drink("Mojito", "Yum mint", 8.0f, true));
+        repository.save(new Drink("Coca", "Yum sugar", 2.0f, false));
+        repository.save(new Drink("Water", "Yum water", 0.0f, false));
+```
+
+// console h2 pour tester
+// que fait le repository? Comment est ce que cela fonctionne ?
+// logger les SQL (chercher comment)
+
 
 ## End to End List
 
+// Controller de nouveau
+
 ## CRUD
+
+// Create/Update/Delte
