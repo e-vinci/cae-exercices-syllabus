@@ -340,12 +340,73 @@ Mais comment ces insertions ont elles été effectuées ? Il faut retourner dans
 
 ### Retour sur les modèles et repository
 
-// que fait le repository? Comment est ce que cela fonctionne ?
+Donc nous avons défini un modèle avec l'annotation @Entity et le nom de la table. Ces informations, et les attributes de la classe Drink permettent à JPA de générer un DDL comme vu plus haut.
 
+Grâve au dialecte, il sera généré dans le DDL de la base de données choisie (SQL n'est pas complètemeent standard, donc c'est important !).
+
+La seconde partie (les insertions) vient du Repository donc cette simple ligne:
+
+```java
+@Repository
+public interface DrinksRepository extends CrudRepository<Drink, Long> {
+}
+```
+
+Le [CrudRepository](https://docs.spring.io/spring-data/commons/docs/current/api/org/springframework/data/repository/CrudRepository.html) fourni par défaut les méthodes standard sont on a besoin pour un modèle:
+
+- findAll() => SELECT * FROM DRINKS
+- findById(id) => SELECT * FROM DRINKS WHERE ID = id
+- save() => INSERT ...
+- update() => UPDATE FROM...
+- delete() => DELETE FROM...
+
+Ces méthodes sont donc disponible pour le modèle sans avoir besoin de les coder - vu qu'à part le nom de la classe et des modèle, le SQL est toujours le même - JPA est donc capable de le générer.
+
+On peut évidemment rajouter des méthodes sur le repository - encore mieux, si ces méthodes sont bien nommées, il ne faut même pas les implémenter:
+
+```java
+@Repository
+public interface DrinksRepository extends CrudRepository<Drink, Long> {
+    Drink findByName(String name);
+}
+```
+
+`name` étant un attribute connu sur `Drink`, JPA peut générer le contenu de la méthode - et donc un SQL du type:
+
+```sql
+SELECT * FROM DRINKS WHERE name = ?
+```
+
+### Résumé: un ORM
+
+JPA est ce qu'on appelle un ORM: Object Relational Mapper - un sytème qui converti des objets en données relationnelles - et l'inverse.
+
+Bien que loin d'être évident à coder, ce n'est en rien de la magie - nous avons vu les différents éléments qui permttent à JPA de générer les SQLs.
+
+De même, la structure de la classe permet à JPA d'instancier les objets au retour d'un appel à findAll (par exemple).
 
 ## End to End List
 
-// Controller de nouveau
+On peut maintenant mettre toutes les pièces ensemble - on va injecter le `DrinksRepository` dans le `DrinksService` pour pouvoir s'en servir pour récupérer nos données à la place de celles hard codées:
+
+```java
+@Service
+public class DrinksService {
+    private final DrinksRepository drinksRepository;
+
+    public DrinksService(DrinksRepository drinksRepository) {
+        this.drinksRepository = drinksRepository;
+    }
+
+    public Iterable<Drink> getAllDrinks() {
+        return drinksRepository.findAll();
+    }
+
+    ...
+}
+```
+
+Testez à nouveau (.http ou dans le navigateur), tout devrait bien fonctionner - pas besoin de changer le controller - que les données arrivent de constante ou de la base de donneé ne fait pas de différence.
 
 ## CRUD
 
