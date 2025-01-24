@@ -282,9 +282,65 @@ public CommandLineRunner demo(DrinksRepository repository) {
         repository.save(new Drink("Water", "Yum water", 0.0f, false));
 ```
 
-// console h2 pour tester
+Relancez le serveur et regardez dans les logs s'ils y a des erreurs (ca ne devrait pas).
+
+## La console h2
+
+La base de donnée h2 vient avec une console pour regarder le contenu - pointez votre browser sur `http://localhost:8080/h2-console` vous devriez voir un écran pour vous logger:
+
+![Exemple d'écran de login](https://s1.o7planning.com/en/11895/images/19171107.png)
+
+Reprenez les valeurs dans votre application.properties pour l'url, le user et le password.
+
+Vous devriez voir la base de données sur la gauche avec la table drinks. Double cliquez dessus pour générer un select all qui devrait vous montrer quelques records.
+
+![](https://blog.termian.dev/img/hq/h2-console.jpg)
+
+Pour s'assurer de ce qui se passe, nous allons ajouter un peu de log via deux lignes de plus dans application.properties
+
+```bash
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.format_sql=true
+```
+
+Ceci demande à Spring Boot de logger tous les SQLs.
+
+Relancez l'applications et regardez les logs vous devriez voir quelque chose comme ceci:
+
+```sql
+Hibernate: 
+    create table drinks (
+        alcoholic boolean,
+        price float(24) not null,
+        id bigint not null,
+        description varchar(255),
+        name varchar(255) unique,
+        primary key (id)
+    )
+```
+
+soit la création d'une table drinks, puis un peu plus loin:
+
+```sql
+Hibernate: 
+    select
+        next value for drinks_seq
+Hibernate: 
+    insert 
+    into
+        drinks
+        (alcoholic, description, name, price, id) 
+    values
+        (?, ?, ?, ?, ?)
+```
+
+soit un appel à une séquence (une fonctionnalité des base de données relationnelle permettant de générer un id) puis un INSERT.
+
+Mais comment ces insertions ont elles été effectuées ? Il faut retourner dans le modèle et le controller pour bien comprendre ce que fait JPA "under the hood" ("en dessous du capot").
+
+### Retour sur les modèles et repository
+
 // que fait le repository? Comment est ce que cela fonctionne ?
-// logger les SQL (chercher comment)
 
 
 ## End to End List
