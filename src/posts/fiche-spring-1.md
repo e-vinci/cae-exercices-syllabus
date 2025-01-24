@@ -541,3 +541,13 @@ String[][] restaurants = {
 };
 ```
 
+Comme dans les exercices dirigés, soyez sur de progresser par étape et de tester régulièrement. Une démarche possible parmis d'autres:
+
+- Créer le controlleur (avec ses annotations) et renvoyer une simple chaine de caractère. Tester (avec le navigateur)
+- Retrouer un array (avec des valeurs fixes) à la place de la chaine. Tester (avec une request http)
+- Créer le service avec le même code que le controlleur
+- Mettre à jour le controller pour utiliser le service (en utilisant Spring pour injecter la dépendance). Tester que tout fonctionne pareil qu'avant
+- Créer le modèle et adapter la méthode du service pour créer des Restaurant plutôt que de simple chaines de caract!res. Tester que vous avez bien les données complètes
+
+De manière générale, éviter d'écrire plus de quelques lignes de code entre chaque test.
+
