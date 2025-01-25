@@ -410,4 +410,60 @@ Testez à nouveau (.http ou dans le navigateur), tout devrait bien fonctionner -
 
 ## CRUD
 
-// Create/Update/Delte
+Nous allons maintenant compléter notre API pour les différentes fonctionss "CRUD". Côté controller, en suivant les standards REST on veut quelque chose comme: 
+
+- GET /drinks: Récupérer toutes les boissons
+- GET /drinks/:id: Récupérer une boisson avec cet id là
+- POST /drinks: Créer une nouvelle boisson
+- PUT /drinks/:id: Mettre à jour la boisson
+- DELETE /drinks/:id: Supprimer la boisson
+
+Cela correspond assez directements aux action "CRUD" dans la base de données:
+
+- SELECT *
+- SELECT * WHERE ID = :id
+- UPDATE WHERE ID = :id
+- DELETE WHERE ID = :id
+
+Le `DrinksRepository` peut déjà faire toutes ces opérations - nous n'avons qu'à les appeller correctement depuis le service.
+
+```java
+    public Drink getDrink(long id) {
+        return drinksRepository.findById(id).orElse(null);
+    }
+
+
+    public Drink createDrink(Drink drink) {
+        return drinksRepository.save(drink);
+    }
+
+    public void deleteDrink(long id) {
+        drinksRepository.deleteById(id);
+    }
+```
+
+Notez cette ligne:
+
+```java
+    return drinksRepository.findById(id).orElse(null);
+```
+
+et particulièrement le `orElse` - que fait cette méthode?
+
+La réponse est dans la définition de `findById` tel que défini dans le `CrudRepository` de Spring documentée [ici](https://docs.spring.io/spring-data/commons/docs/current/api/org/springframework/data/repository/CrudRepository.html).
+
+La signature est:
+
+```java
+Optional<T> findById(ID id)
+```
+
+Le `<T>` indique que cette fonction est générique - elle retourne une valeur du type défini - notre repository étant défini comme un `CrudRepository<Drink>`, la méthode renvoie logiquement un objet de type Drink... ou plus exactement un `Optional<Drink>`.
+
+Pourquoi ? Cette méthode va générer un `SELECT * FROM DRINKS WHERE ID = :id` - ce qui va envoyer un record correspondant à un Drink... ou pas de record du tout (si l'id n'est pas présent dans la table).
+
+La méthode renvoie donc un [Optional](https://docs.oracle.com/javase/8/docs/api/java/util/Optional.html) - un objet qui contient soit une valeur (le Drink) - soit null.
+
+Ce "pattern" permet de facilement tester si la valeur existe ou non. orElse() est une méthode d'Optional qui renvoie soit la valeur soit null si absente.
+
+Créer des fichiers http pour tester le tout.
