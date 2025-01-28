@@ -300,10 +300,10 @@ On peut également créer un ficher de test dans Intellij, dans le folder src/te
 @baseUrl = http://localhost:8080
 
 ### Get the standard message
-GET {{baseUrl}}/hello/
+GET \{\{baseUrl\}\}/hello/
 
 ### Get the custom message
-GET {{baseUrl}}/hello/?name=Sarah
+GET \{\{baseUrl\}\}/hello/?name=Sarah
 ```
 
 Une fois le fichier sauvegardé il est possible de lancer ces test avec un bouton de droite > Run All
