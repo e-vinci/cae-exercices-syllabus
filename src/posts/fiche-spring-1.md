@@ -296,15 +296,17 @@ Il est possible de tester notre endpoint de différente manières - la plus simp
 On peut également créer un ficher de test dans Intellij, dans le folder src/test/ nommé hello.http:
 
 
+{% raw  %}
 ```http
 @baseUrl = http://localhost:8080
 
 ### Get the standard message
-GET \{\{baseUrl\}\}/hello/
+GET {{baseUrl}}/hello/
 
 ### Get the custom message
-GET \{\{baseUrl\}\}/hello/?name=Sarah
+GET {{baseUrl}}/hello/?name=Sarah
 ```
+{% endraw %}
 
 Une fois le fichier sauvegardé il est possible de lancer ces test avec un bouton de droite > Run All
 
