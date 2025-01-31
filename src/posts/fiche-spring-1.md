@@ -150,8 +150,6 @@ Ceci est un message d'erreur - mais qui confirme que tout est en place - le serv
 
 La lecture du terminal et des erreurs dans le navigateur est une compétence critique à développer pour comprendre ce qui se passe dans vos applications.
 
-Ceci est un bon moment pour commiter/pusher votre projet sur un repo github avant de poursuivre.
-
 ### L'IDE et vous
 
 Intellij nous aide énormément ici - et c'est le but de ces outils ! Gardez toute fois à l'esprit de ne pas trop dépendre d'une "magie" potentiellement incomprise. 
