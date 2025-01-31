@@ -203,7 +203,7 @@ Faite attention au bon placement et nommage des fichiers - Java suppose un lien 
 
 Si vous avez nommé votre projet/package différent cela peut être une autre localisation. L'important est d'être consistant.
 
-Rouvrez votre navigateur et pointez le sur localhost:8080/hello - vous devriez voir le message "Hello World!".
+Rouvrez votre navigateur et pointez le sur `localhost:8080/hello/` (attenion le "/" à la fin est important - on y revient) - vous devriez voir le message "Hello World!".
 
 Prenons un peu de temps pour détailler le code ligne par ligne
 
@@ -230,6 +230,16 @@ Au niveau de la méthode:
 La méthode dispose de son propre mapping - ici "/" - ce code sera donc exécuté à /hello/ - d'autres méthode de la même classe pourraient être crées avec des mapping different. On note également que c'est un GetMapping - la méthod est donc appellée si on envoie un GET /hello/ (pas un POST ou PUT).
 
 Ne reste qu'a renvoyer le résultat que l'on peut voir à l'écran. Modifiez le string, rechargez la page - le résultat est mis à jour - Spring recharge ici tout le code à chaque visite - c'est donc (un peu plus) lent, mais pratique lorsque l'on développe (cela évite de devoir couper/relancer le serveur à chaque changement).
+
+Une note importante sur les mappings - comme leur nom l'indique il ne s'agit que de "liens" entre une url et une méthode. Ce lien n'est pas obligé d'être 1-1, on peut créer de multiples mappings sur une seule méthode - un exemple:
+
+```java
+    @GetMapping({"/", ""})
+    public String hello() {
+```
+
+Ceci vous permet d'utiliser indifféremment `localhost:8080/hello/` ou `localhost:8080/hello`.
+
 
 ### Avec du vrai JSON dedans
 
