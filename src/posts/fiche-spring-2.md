@@ -8,6 +8,8 @@ tags: [fiche, spring]
 
 # Spring et JPA
 
+## Introduction
+
 La semaine passée nous avons crée notre première application Spring, et appris différents concepts:
 
 - Injection de dépendance
@@ -17,7 +19,9 @@ La semaine passée nous avons crée notre première application Spring, et appri
 
 Cette semaine nous allons ajouter une brique supplémentaire - une couche "data" basée sur une base de données relationnelle - pour rappel la semaine passée nos données étaient de simple tableaux en Java (voir un fichier .json).
 
-## Objectif du projet
+# Théorie
+
+### But de la séance
 
 Nous allons créer une API pour le point de vente d'un café. Celui-ci propose un ensemble de boissons. Il est donc nécessaire de pouvoir:
 
@@ -28,7 +32,7 @@ Nous allons créer une API pour le point de vente d'un café. Celui-ci propose u
 - Editer une boisson
 - Chercher parmis les boissons basé sur tout ou une partie du nom
 
-Tous ces éléments doivent donc être crées sous forme de end points.
+Tous ces éléments doivent être crées sous forme de end points.
 
 Ceci constitue une architecture "classique" de backend:
 
@@ -36,9 +40,113 @@ Ceci constitue une architecture "classique" de backend:
 - Couche service (logique business)
 - Couche web (request/response, etc)
 
-A nouveau cette distinction peut paraître forcée dans l'exercice (on pourrait assez facilement mettre tout le code dans le controller) mais a du sens dès lors qu'on arrive sur des applications de taille réelle (plusieurs dizaines voir centaines de table, du code en dizaine de millier de lignes ou plus).
+A nouveau cette distinction peut paraître forcée dans l'exercice (on pourrait assez facilement mettre tout le code dans le controller) mais a du sens dès lors qu'on arrive sur des applications de taille réelle (plusieurs dizaines voir centaines de tables, du code en dizaine de millier de lignes ou plus).
 
-## Project setup
+### JPA & JDBC
+
+Pour un peu de terminologie:
+- JDBC (Java Database Connectivity) permet de connecter une application java à une source de donnée
+- JPA - "Java Persistence API" est une *specification* sur la manière dont une application peut se connecter à une base de données. Ce standard permet que des développeurs comme nous puissons facilement utiliser différentes bases de données sans devoir tout réapprendre depuis le début. JPA fonctionne grâce à la couche JDBC
+- Hibernate est une implémentation (la plus utilisée) de JPA
+
+Petit schéma pour clarifier:
+
+![](https://velog.velcdn.com/images/blaze241/post/2f6db67e-0918-42b3-8250-111f8224ec87/image.png)
+
+### Repositories
+
+A notre structure Controller/Services/Modèles vient s'ajouter une couche supplémentaire - les Repositories ("dépôts"). Ces classes vont servir de lien entre la base de données (Postgres pour nous) et le reste de l'application.
+
+De la même manière que les Controller sont les seuls endroit où l'on devrait parler de concepts HTTP (Request, Response, Forms, etc), les Repository sont les seules classes qui devraient gérer des aspects base de données - connections, queries, results, etc.
+
+Cette séparation a de nombreux avantages (particulièrement une fois que l'application grandit) - notamment au niveau des tests - la logique business étant dans les Service et indépendante tant des concepts web que de la base de données.
+
+### Entities ("Entités")
+
+Un "Entity" dans JPA est une classe Java (typiquement un modèle) dont les objets ont vocation à être sauvegardés (et lus) dans la base de données.
+
+Donc:
+
+- A une classe (Drink) va correspondre une table dans la base de données
+- A un objet (new Drink()...) va correspondre une ligne dans la table
+
+JPA va nous permettre de faire ces opérations - sans écrire une ligne de SQL (ni DDL, ni DML), grâce à quelques annotations.
+
+### Résumé: un ORM
+
+JPA est ce qu'on appelle un ORM: Object Relational Mapper (ORM) - un sytème qui converti des objets en données relationnelles - et l'inverse.
+
+Bien que loin d'être évident à coder, ce n'est en rien de la magie - JPA "traduit" simplement des éléments OO en des éléments relationnels:
+
+- Classes vers Tables
+- Objets vers Lignes
+- Attribute vers Colonnes
+
+De même, la structure de la classe permet à JPA d'instancier les objets au retour d'un appel à findAll (par exemple).
+
+Comme toute abstraction, bien que très utile, JPA a ses limites et il est important de garder en tête ce qu'il y a "en dessous" - des requêtes SQL essentiellement.
+
+Les modèles objets et relationnels n'ont pas exactement les mêmes capacités - il n'y a en base de données ni héritage ni polymorphisme, etc. 
+
+## Setup
+
+### Postgres
+
+Pour faire fonctionner cet exercice, il nous faut une base de données - Postgresql plus précisément. Si vous n'avez pas de Postgres sur votre machine, vous pouvez simplement faire tourner ce docker-compose.yml (a recopier dans votre projet):
+
+```yml
+services:
+  db:
+    image: postgres:latest
+    container_name: postgres_container
+    environment:
+      POSTGRES_DB: cae_db
+      POSTGRES_USER: cae_user
+      POSTGRES_PASSWORD: cae
+    ports:
+      - "5432:5432"
+```
+
+Pour rappel, Docker permet de démarrer des "container", sorte de machines virtuelles avec un simple `docker-compose up` dans le répertoire. Vous devez pour cela toutefois avoir le docker dameon actif sur votre machine. En majorité en Windows ceci se fait via [Docker Desktop](https://docs.docker.com/desktop/setup/install/windows-install/).
+
+Docker dépasse le cadre de ce cours, mais de manière simple la configuration indique que l'on souhaite créer un service nommé "db" qui:
+
+```yml
+    image: postgres:latest
+    container_name: postgres_container
+```
+
+se base sur une image existante appellée `postgres` dont on souhaite la dernière version (`latest`). Cette image est récupérée sur Docker Hub (vous pouvez la voir [ici](https://hub.docker.com/_/postgres/)) et téléchargée sur votre machine si vous ne la posséder pas encore.
+
+On va la nommer `posgres_container` (docker compose peut créer et démarrer plusieurs services/container donc les nommer est utile).
+
+
+```yml
+environment:
+      POSTGRES_DB: cae_db
+      POSTGRES_USER: cae_user
+      POSTGRES_PASSWORD: cae
+```
+
+Créer un user "cae_user" avec son password "cae" sur une base de données "cae_db" - juste ce qu'il nous faut pour notre projet
+
+```yaml
+    ports:
+      - "5432:5432"
+```
+
+Ce service va tourner sur le port 5432 - pourquoi alors deux ports ? (`5432:5432`) - parce que la machine dans laquelle va tourner PG n'est pas la vôtre - c'est un container distinct qui a donc ses propres ports. Ceux-ci sont "mappés" aux port de votre machine physique, et peuvent l'être sur des valeurs différentes.
+
+Dans notre cas on reste au plus simple:
+
+- Faire tourner PG sur le port 5432 sur le container
+- Mapper ce port au port 5432 de la machine hôte
+
+Vous pouvez également lancer le fichier via Intellij directement.
+
+# Exercice 
+
+### Projet
 
 Nous allons créer un nouveau projet pour cette seconde fiche.
 
@@ -57,46 +165,41 @@ Dans le second écran, sélectionnez:
 - Lombok
 - Spring Web
 - Spring Data JPA
-- H2 Database
+- Postgres Database
 
 Appuyez sur créer.
 
 Nous avons donc deux dépendances supplémentaires:
 
 - Spring Data JPA est un package de Spring avec tout un ensemble de classes et d'annotations pour facilier l'interaction entre le code Java et une base de donnée relationnelle
-- H2 est une base de données relationnelle "in memory" (au sens qui tourne en mémoire). Elle fonctionne de manière identique à une base de donnée comme Postgresql, mais a l'avantage de pouvoir être installée beaucoup plus facilement. Il faut par contre bien retenir qu'elle est inadaptée à des applications en production (nous allons voir pourquoi).
+- Postgres pour avoir les drivers nécessaire à se connecter à notre base de données (chaque base données vient avec ses propres drivers et petites parcularités).
+
+### Petit tour du projet et configuration
 
 La structure devrait vous être familière.
 
 Ouvrez le fichier application.properties et ajoutez les éléments suivants:
 
 ```bash
-spring.datasource.driver-class-name=org.h2.Driver
-spring.jpa.database-platform=org.hibernate.dialect.H2Dialect
+spring.datasource.driver-class-name=org.postgresql.Driver
+spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect
 
-spring.datasource.url=jdbc:h2:mem:testdb
-spring.datasource.username=sa
-spring.datasource.password=
+spring.datasource.url=jdbc:postgresql://localhost:5432/cae_db
+spring.datasource.username=cae_user
+spring.datasource.password=cae
 
 spring.jpa.hibernate.ddl-auto=create-drop
 spring.jpa.generate-ddl=true
 ```
 
-Pour un peu de terminologie:
-- JDBC (Java Database Connectivity) permet de connecter une application java à une source de donnée
-- JPA - "Java Persistence API" est une *specification* sur la manière dont une application peut se connecter à une base de données. Ce standard permet que des développeurs comme nous puissons facilement utiliser différentes bases de données sans devoir tout réapprendre depuis le début. JPA fonctionne grâce à la couche JDBC
-- Hibernate est une implémentation (la plus utilisée) de JPA
-
-Petit schéma pour clarifier:
-
-![](https://velog.velcdn.com/images/blaze241/post/2f6db67e-0918-42b3-8250-111f8224ec87/image.png)
+Attention, si vous avez utilisez des valeurs différentes pour le nom ou user de la base de données, il faut adapter en conséquence !
 
 JPA permettant de se connecter à quasiment n'importe quelle base de données nous devons spécifier un ensemble d'éléments.
 
 - `driver-class-name` indique quelle classe utiliser pour intéragir avec la base de données (chaque base de donnée a son propre driver)
 - Le dialecte est en hibernate (l'implémentation de JPA)
 
-- `datasource-url` donne le "chemin" vers la base de donnée. Ici jdbc (la connection) : h2 (le type de base de données) : mem (en mémoire) : testdb (le nom de notre DB).
+- `datasource-url` donne le "chemin" vers la base de donnée. Ici jdbc (la connection) : postgresql (le type de base de données) : mem (en mémoire) : cae_db (le nom de notre DB).
 - On trouve après classiquement un user & password
 
 Les deux derniers éléments indiquent à JPA de créer ou droper (supprimer) les tables et schéma en fonction de ce qui est défini dans le code (on va y revenir).
@@ -107,7 +210,7 @@ On va repartir de la même logique que celle utilisée la semaine passée
 
 ### Modèle
 
-Un modèle Drink, représenté de manière simple ici.
+Nous allons créer un modèle Drink, représenté de manière simple ici.
 
 
 ```java
@@ -132,7 +235,7 @@ A vous de voir si vous générez les getter/setter ou si vous passez par Lombok,
 
 ### Service
 
-Un service pour récupérer "tous" les Drink - au moins quelques un pour tester.
+Un service pour récupérer "tous" les Drink - au moins quelques-uns pour tester.
 
 ```java
 package be.vinci.cae.fiche2.services;
@@ -143,7 +246,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class DrinksService {
     public Iterable<Drink> getAllDrinks() {
-        List<Drink> allDrinks = new ArrayList({
+        List<Drink> allDrinks = List.of({
             new Drink("Bloody Mary", "Yum totmatoes", 10.0f, true),
             new Drink("Mojito", "Yum mint", 8.0f, true),
             new Drink("Water", "Fresh!", 2.0f, false)
@@ -153,6 +256,8 @@ public class DrinksService {
     }
 }
 ```
+
+`List.of` permet d'initialiser une liste à partir d'un tableau.
 
 ### Controller
 
@@ -188,20 +293,11 @@ Temps de tester tout ceci (via le navigateur) - et de créer un petit fichier ht
 GET {{baseUrl}}/drinks/
 ```
 
-Nous sommes plus ou moins de retour au résultat précédent - on va maintenant introduire deux nouveaux concepts.
+Nous sommes plus ou moins de retour au résultat précédent - on va maintenant introduire nos Entités et Repository.
 
 ## Entities and Repositories
 
 ### Entity 
-
-Un "Entity" dans JPA est une classe Java dont les objets ont vocation à être sauvegardés (et lu) dans la base de données.
-
-Donc:
-
-- A une classe (Drink) va correspondre une table dans la base de données
-- A un objet (new Drink()...) va correspondre une ligne dans la table
-
-JPA va nous permettre de faire ces opérations - sans écrire une ligne de SQL (ni DDL, ni DML).
 
 Nous allons reprendre notre modèle "Drink" et en faire une entité.
 
@@ -267,7 +363,7 @@ Le [CommandLineRunner](https://docs.spring.io/spring-boot/api/java/org/springfra
 
 Relancez l'application - vous devriez voir le "Hello" dans les logs.
 
-## Seed data and the ORM
+### Seed data and the ORM
 
 Nous allons adapter le CommandRunner pour insérer des données dans une table - grâce au modèle et au repository.
 
@@ -282,19 +378,13 @@ public CommandLineRunner demo(DrinksRepository repository) {
         repository.save(new Drink("Water", "Yum water", 0.0f, false));
 ```
 
-Relancez le serveur et regardez dans les logs s'ils y a des erreurs (ca ne devrait pas).
+Relancez le serveur et regardez dans les logs s'ils y a des erreurs (cela ne devrait pas).
 
-## La console h2
+### Test !
 
-La base de donnée h2 vient avec une console pour regarder le contenu - pointez votre browser sur `http://localhost:8080/h2-console` vous devriez voir un écran pour vous logger:
+Ouvrez votre base de données dans DataGrip (ou via n'importe quel outil permettant de s'y connecter)
 
-![Exemple d'écran de login](https://s1.o7planning.com/en/11895/images/19171107.png)
-
-Reprenez les valeurs dans votre application.properties pour l'url, le user et le password.
-
-Vous devriez voir la base de données sur la gauche avec la table drinks. Double cliquez dessus pour générer un select all qui devrait vous montrer quelques records.
-
-![](https://blog.termian.dev/img/hq/h2-console.jpg)
+Vous devriez voir la base de données avec la table drinks. Faite rapidement un SELECT * FROM DRINKS - vous devriez voir les différents records.
 
 Pour s'assurer de ce qui se passe, nous allons ajouter un peu de log via deux lignes de plus dans application.properties
 
@@ -377,13 +467,6 @@ public interface DrinksRepository extends CrudRepository<Drink, Long> {
 SELECT * FROM DRINKS WHERE name = ?
 ```
 
-### Résumé: un ORM
-
-JPA est ce qu'on appelle un ORM: Object Relational Mapper - un sytème qui converti des objets en données relationnelles - et l'inverse.
-
-Bien que loin d'être évident à coder, ce n'est en rien de la magie - nous avons vu les différents éléments qui permttent à JPA de générer les SQLs.
-
-De même, la structure de la classe permet à JPA d'instancier les objets au retour d'un appel à findAll (par exemple).
 
 ## End to End List
 
