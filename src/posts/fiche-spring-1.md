@@ -297,7 +297,7 @@ Pour information, il est également possible d'écrire ceci avec un [Optional](h
 Il est possible de tester notre endpoint de différente manières - la plus simple étant via la ligne de commande avec curl:
 
 ```bash
-> curl localshot:8080/hello/?name=Leila
+> curl localhost:8080/hello/?name=Leila
 {"message":"Hello Leila"}
 ```
 
