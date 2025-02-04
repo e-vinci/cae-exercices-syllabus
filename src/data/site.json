@@ -14,9 +14,9 @@
       "external": false
     },
     {
-      "text": "A propos",
-      "url": "/about",
-      "external": false
+      "text": "GitHub",
+      "url": "https://github.com/e-vinci/cae-exercices-syllabus",
+      "external": true
     }
   ],
   "socialLinks": [

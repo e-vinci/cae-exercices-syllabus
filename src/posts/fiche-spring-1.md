@@ -10,7 +10,7 @@ tags: [fiche, spring]
 
 ## Objectif et organisation du cours
 
-Ceci est un cours d'introduction à [Spring](spring.io) - un framework web (backend) écrit en Java. Les exercices présents dans les trois fiches de ce cours vont vous servir à apprendre à utiliser le framework pour le projet qui va suivre.
+Ceci est un cours d'introduction à [Spring](https://spring.io) - un framework web (backend) écrit en Java. Les exercices présents dans les trois fiches de ce cours vont vous servir à apprendre à utiliser le framework pour le projet qui va suivre.
 
 Il ne dure que trois semaines (trois fois quatre heure d'atelier), en mode "travaux dirigés" - chaque semaine a un sujet précis et une fiche d'exercices à suivre.
 
