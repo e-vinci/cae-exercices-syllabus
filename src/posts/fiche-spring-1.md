@@ -507,7 +507,7 @@ Durant cette première séance, on a déjà vu pas mal d'avantage du framework:
 - Serialisation: On travaille avec des objets java standard (Quote) et les framework les convertis en JSON quand nécessaire.
 - On peut "mapper" des méthodes avec des urls et récupérer facilement les paramètres pour s'en servir dans le code.
 
-Au passage on a vu avec Lombok comment écrires des modèles en quelques lignes.
+Au passage on a vu avec Lombok comment écrires des modèle en quelques lignes.
 
 ## Exercice complémentaire
 
