@@ -297,14 +297,13 @@ Pour information, il est également possible d'écrire ceci avec un [Optional](h
 Il est possible de tester notre endpoint de différente manières - la plus simple étant via la ligne de commande avec curl:
 
 ```bash
-> curl localhost:8080/hello/?name=Leila
+> curl http://localhost:8080/hello/?name=Leila
 {"message":"Hello Leila"}
 ```
 
 On peut également créer un ficher de test dans Intellij, dans le folder src/test/ nommé hello.http:
 
 
-{% raw  %}
 ```http
 @baseUrl = http://localhost:8080
 
@@ -314,7 +313,6 @@ GET {{baseUrl}}/hello/
 ### Get the custom message
 GET {{baseUrl}}/hello/?name=Sarah
 ```
-{% endraw %}
 
 Une fois le fichier sauvegardé il est possible de lancer ces test avec un bouton de droite > Run All
 
@@ -507,7 +505,7 @@ Durant cette première séance, on a déjà vu pas mal d'avantage du framework:
 - Serialisation: On travaille avec des objets java standard (Quote) et les framework les convertis en JSON quand nécessaire.
 - On peut "mapper" des méthodes avec des urls et récupérer facilement les paramètres pour s'en servir dans le code.
 
-Au passage on a vu avec Lombok comment écrires des modèle en quelques lignes.
+Au passage on a vu avec Lombok comment écrire des modèles en quelques lignes.
 
 ## Exercice complémentaire
 
