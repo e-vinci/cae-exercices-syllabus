@@ -62,3 +62,9 @@
 .nav__list a:hover {
   color: rgb(41, 41, 41);
 }
+
+@media screen and (max-width: 608px) { /* Adjust breakpoint as needed */
+  .header__logo {
+    display: none;
+  }
+}
