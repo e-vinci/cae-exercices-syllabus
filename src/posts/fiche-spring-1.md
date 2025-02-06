@@ -46,17 +46,17 @@ Les trois fiches recouvrent la même matière que celle que vous avez vue en Nod
 
 Pour ce projet nous avons besoins de différents éléments:
 
-- IntelliJ: Disponible sur votre machine, ou à installer (version [Ultimate](https://www.jetbrains.com/idea/download/?section=windows) via compte étudiant Vinci)
+- IntelliJ: Disponible sur votre machine, ou à installer (version [Ultimate](https://www.jetbrains.com/idea/download/?section=windows) via compte étudiant Vinci). Assurez vous d'avoir la dernière version (2024.3.2.2 ou plus récente) sans quoi suivre les exercices sera plus compliqué (certaines options ont changé de nom par exemple). Vous pouvez vérifier la version dans IntelliJ via Help > About. Jetbrains distribue une [Toolbox](https://www.jetbrains.com/toolbox-app/) pour faciliter les mises à jour si nécessaire.
 - Un JDK Java: Si pas encore présent, IntelliJ va vous proposer d'en installer un - prenez celui [recommandé](https://bell-sw.com/blog/liberica-jdk-21-lts-release-a-lasting-foundation-for-your-java-application/)
 - Docker (pour faire tourner des services annexes). Il vous faudra pour cela [Docker Desktop](https://docs.docker.com/desktop/setup/install/windows-install/) sous Windows.
 
-Vérifiez que tout semble bien installé avant de faire la suite.
+> Note: vous n'aurez pas besoin de Docker pour la première séance (cette semaine donc). Nous allons nous en servir la semaine prochaine pour faire tourner une base de donnée PostgreSQL. Ne perdez donc pas trop de temps avec cette installation.
 
 ## Une première application
 
 Nous allons créer une première application Spring Boot. Pour faciliter le setup, Spring Boot dispose d'[Initializr](https://start.spring.io/index.html) - une interface web permettant de créer la structure de base d'un projet en quelques click.
 
-Initializr est inclus dans Intellij nous pouvons donc l'utiliser directement sans quitter l'IDE:
+Initializr est inclus dans Intellij nous pouvons donc l'utiliser directement sans quitter l'IDE (il n'est donc pas nécessaire d'utiliser la version sur le web pour cet exercice).
 
 ### Créer un nouveau projet
 
@@ -301,7 +301,8 @@ Il est possible de tester notre endpoint de différente manières - la plus simp
 {"message":"Hello Leila"}
 ```
 
-On peut également créer un ficher de test dans Intellij, dans le folder src/test/ nommé hello.http:
+On peut également créer un ficher de test dans Intellij, dans le folder src/test/ nommé hello.http.
+Pour faire ceci, faite un clic droit sur le dossier test et « New » -> « HTTP request »
 
 
 ```http
