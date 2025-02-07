@@ -305,6 +305,7 @@ On peut également créer un ficher de test dans Intellij, dans le folder src/te
 Pour faire ceci, faite un clic droit sur le dossier test et « New » -> « HTTP request »
 
 
+{% raw %}
 ```http
 @baseUrl = http://localhost:8080
 
@@ -314,6 +315,7 @@ GET {{baseUrl}}/hello/
 ### Get the custom message
 GET {{baseUrl}}/hello/?name=Sarah
 ```
+{% endraw %}
 
 Une fois le fichier sauvegardé il est possible de lancer ces test avec un bouton de droite > Run All
 
@@ -321,7 +323,7 @@ Intellij va alors exécuter chaque requête présente et sauvegarder les résult
 
 Mieux encore il est possible de valider les résultats:
 
-{% raw  %}
+{% raw %}
 ```http
 @baseUrl = http://localhost:8080
 
