@@ -296,6 +296,7 @@ Pour information, il est également possible d'écrire ceci avec un [Optional](h
 
 Il est possible de tester notre endpoint de différente manières - la plus simple étant via la ligne de commande avec curl:
 
+{% raw %}
 ```bash
 > curl http://localhost:8080/hello/?name=Leila
 {"message":"Hello Leila"}
@@ -312,6 +313,7 @@ GET {{baseUrl}}/hello/
 ### Get the custom message
 GET {{baseUrl}}/hello/?name=Sarah
 ```
+{% endraw %}
 
 Une fois le fichier sauvegardé il est possible de lancer ces tests avec un bouton de droite > Run All
 
@@ -319,6 +321,7 @@ IntelliJ va alors exécuter chaque requête présente et sauvegarder les résult
 
 Mieux encore il est possible de valider les résultats:
 
+{% raw %}
 ```http
 @baseUrl = http://localhost:8080
 
@@ -353,6 +356,7 @@ GET {{baseUrl}}/hello/?name=Sarah
     });
 %}
 ```
+{% endraw %}
 
 Les tests vérifient dans l'ordre:
 
