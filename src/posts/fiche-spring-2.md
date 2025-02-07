@@ -508,6 +508,30 @@ Cela correspond assez directements aux action "CRUD" dans la base de données:
 - UPDATE WHERE ID = :id
 - DELETE WHERE ID = :id
 
+### Controller
+
+Un petit update côté Controller - on a vu comment gérer des paramères dans l'url
+
+> http://localhost:8080/drinks?name=bloody
+
+avec quelque chose comme:
+
+```java
+@GetMapping("/")
+public String hello(@RequestParam(required = false) String name) { ...
+```
+
+On peut voir une logique similaire pour des paramêtres qui font partie de l'url avec @PathVariable
+
+> http://localhost:8080/drinks/1
+
+```java
+@GetMapping("/{id}")
+public String getDrink(@PathVariable() String id) { ...
+```
+
+### Repository 
+
 Le `DrinksRepository` peut déjà faire toutes ces opérations - nous n'avons qu'à les appeller correctement depuis le service.
 
 ```java
