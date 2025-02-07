@@ -10,7 +10,7 @@ tags: [fiche, spring]
 
 ## Objectif et organisation du cours
 
-Ceci est un cours d'introduction à [Spring](https://spring.io) - un framework web (backend) écrit en Java. Les exercices présents dans les trois fiches de ce cours vont vous servir à apprendre à utiliser le framework pour le projet qui va suivre.
+Ceci est un cours d'introduction à [Spring](https://spring.io/) - un framework web (backend) écrit en Java. Les exercices présents dans les trois fiches de ce cours vont vous servir à apprendre à utiliser le framework pour le projet qui va suivre.
 
 Il ne dure que trois semaines (trois fois quatre heure d'atelier), en mode "travaux dirigés" - chaque semaine a un sujet précis et une fiche d'exercices à suivre.
 
@@ -22,17 +22,17 @@ Le cours en lui même ne donne pas lieu à une évaluation.
 
 ### Un framework ?
 
-On distingue générale des "bibliothèques" (librairies ou packages en anglais) des "frameworks". Ceux qui offrent un cadre de développement complet dans lequel notre code application va s'inscrire.
+On distingue généralement les "bibliothèques" (librairies ou packages en anglais) des "frameworks". Ceux qui offrent un cadre de développement complet dans lequel notre code application va s'inscrire.
 
 En d'autres mots, on dit souvent qu'on appelle une bibliothèque, mais que dans le cas du framework c'est celui ci qui appelle notre code.
 
-Le but d'un framework est de fournir une structure et une base nécessaire à toutes les applications - il n'y a pas d'intérêt pour une société ou une équipe de réecrire à chaque fois du code permettant par exemple d'envoyer une requête HTTP ou d'accèder à une base de données Postgresql.
+Le but d'un framework est de fournir une structure et une base nécessaire à toutes les applications - il n'y a pas d'intérêt pour une société ou une équipe de réécrire à chaque fois du code permettant par exemple d'envoyer une requête HTTP ou d'accéder à une base de données PostgreSQL.
 
-Le code dit *applicatif* que nous allons écrire peut alors se conctrer sur les fonctionnalités (features) souhaitées par les utilisateurs.
+Le code dit *applicatif* que nous allons écrire peut alors se concentrer sur les fonctionnalités (features) souhaitées par les utilisateurs.
 
 ### Spring
 
-Spring a émergé d'abord comme une alternatives au framework "J2EE" officiel (fourni à l'époque par Sun) percu comme plus facile d'emploi et plus efficace. Le framework s'est depuis imposé comme étant le cadre technique "de facto" des projets backend en Java - il est donc [très présent dans l'industrie](https://survey.stackoverflow.co/2024/technology#1-web-frameworks-and-technologies) y compris en Belgique.
+Spring a émergé d'abord comme une alternative au framework "J2EE" officiel (fourni à l'époque par Sun) perçu comme plus facile d'emploi et plus efficace. Le framework s'est depuis imposé comme étant le cadre technique "de facto" des projets backend en Java - il est donc [très présent dans l'industrie](https://survey.stackoverflow.co/2024/technology#1-web-frameworks-and-technologies) y compris en Belgique.
 
 ### Backend et frontend
 
@@ -54,21 +54,21 @@ Pour ce projet nous avons besoins de différents éléments:
 
 ## Une première application
 
-Nous allons créer une première application Spring Boot. Pour faciliter le setup, Spring Boot dispose d'[Initializr](https://start.spring.io/index.html) - une interface web permettant de créer la structure de base d'un projet en quelques click.
+Nous allons créer une première application Spring Boot. Pour faciliter le setup, Spring Boot dispose d'[Initializr](https://start.spring.io/) - une interface web permettant de créer la structure de base d'un projet en quelques click.
 
-Initializr est inclus dans Intellij nous pouvons donc l'utiliser directement sans quitter l'IDE (il n'est donc pas nécessaire d'utiliser la version sur le web pour cet exercice).
+Initializr est inclus dans IntelliJ nous pouvons donc l'utiliser directement sans quitter l'IDE (il n'est donc pas nécessaire d'utiliser la version sur le web pour cet exercice).
 
 ### Créer un nouveau projet
 
 - New Project -> Spring Boot
-    - Nom: fiche1
-    - Language: Java
-    - Type: Maven
-    - Group: be.vinci.cae
-    - Package: be.vinci.cae
-    - JDK: Celui que vous avez installé
-    - Java: 21
-    - Packaging: Jar
+- Nom: fiche1
+- Language: Java
+- Type: Maven
+- Group: be.vinci.cae
+- Package: be.vinci.cae
+- JDK: Celui que vous avez installé
+- Java: 21
+- Packaging: Jar
 
 Dans le second écran, sélectionnez:
 
@@ -79,18 +79,18 @@ Appuyez sur créer.
 
 ### Quelques explications
 
-- Language Java: C'est ce que nous faisons ici, mais à noter que la JVM [peut gérer d'autres languages que le Java](https://en.wikipedia.org/wiki/List_of_JVM_languages) - l'exmple le plus fréquent étant Kotlin, mais aussi Scala ou d'autres JRuby. Tous ces languages peuvent être compilés vers un language de plus bas niveau (le [Java Bytecode](https://en.wikipedia.org/wiki/Java_bytecode)) que la JVM peut exécuter
-- Maven: Maven est un outil de build - une série de commande et un fichier de configuration (pom.xml) qui permet notemment de:
-  - Lister les dépendances (le code externe dans votre application a besoin pour tourner)
-  - Gérer des actions ("target") comme compiler, exécuter, lancer les tests sur votre projets ou même le déployer sans avoir à lancer de longuees commandes
-- Lombok: Le [Project Lombok](https://projectlombok.org/features/) est un package open source qui fourni un ensemble d'annotations permettant de gagner du temps - par exemple de ne pas avoir à écrire des Getter/Setter ou des fonctions comme [equals ou hashcode](https://projectlombok.org/features/EqualsAndHashCode) à la main 
+- Language Java: C'est ce que nous faisons ici, mais à noter que la JVM [peut gérer d'autres langages que le Java](https://en.wikipedia.org/wiki/List_of_JVM_languages) - l'exemple le plus fréquent étant Kotlin, mais aussi Scala ou d'autres JRuby. Tous ces langages peuvent être compilés vers un langage de plus bas niveau (le [Java Bytecode](https://en.wikipedia.org/wiki/Java_bytecode)) que la JVM peut exécuter
+- Maven: Maven est un outil de build - une série de commande et un fichier de configuration (pom.xml) qui permet notamment de:
+- Lister les dépendances (le code externe dans votre application a besoin pour tourner)
+- Gérer des actions ("target") comme compiler, exécuter, lancer les tests sur votre projets ou même le déployer sans avoir à lancer de longues commandes
+- Lombok: Le [Project Lombok](https://projectlombok.org/features/) est un package open source qui fourni un ensemble d'annotations permettant de gagner du temps - par exemple de ne pas avoir à écrire des Getter/Setter ou des fonctions comme [equals ou hashcode](https://projectlombok.org/features/EqualsAndHashCode) à la main
 - Packaging: Une application java va contenir de nombreux fichiers - ceux qui sont réuni dans un fichier .war ou .jar - une sorte de zip avec des méta données spécifiques (vous pouvez d'ailleurs extraire le contenu d'un .jar avec WinZip ou autres - n'hésitez pas à essayer).
 
 ### Petit tour du projet
 
 Un ensemble de fichiers et répertoires ont été crées:
 
-- .idea: Répertoire avec des données utilisée par Intellij (configuration de project) - gérer par l'IDE, normalement rien à modifier
+- .idea: Répertoire avec des données utilisée par IntelliJ (configuration de projet) - gérer par l'IDE, normalement rien à modifier
 - .mvn: Même chose - mais pour Maven
 - mvnw: Runner pour maven - permet de lancer facilement des commandes Maven depuis le terminal
 - pom.xml: Le fichier principal de maven
@@ -100,11 +100,11 @@ Un ensemble de fichiers et répertoires ont été crées:
 
 ### Test !
 
-On va ici développer progressivement une application un peu plus grandes que celles auxquelles vous êtes habitués. L'important est de tester le plus souvent possible pour s'assurer que les choses fonctionnent. Il est plus facile de trouver et de corriger une erreur sur cinq lignes de code que sur cinquante ou cinq cent. 
+On va ici développer progressivement une application un peu plus grande que celles auxquelles vous êtes habitués. L'important est de tester le plus souvent possible pour s'assurer que les choses fonctionnent. Il est plus facile de trouver et de corriger une erreur sur cinq lignes de code que sur cinquante ou cinq cent.
 
 Dans le cas présent on a encore rien codé, mais on peut déjà lancer l'application via le bouton "Play" en haut de l'écran:
 
-![](/images/play-spring-app.png)
+![](https://cae-exercices.e-vinci.be/images/play-spring-app.png)
 
 Après une série de lignes vous devriez voir un log du type:
 
@@ -124,19 +124,19 @@ Après une série de lignes vous devriez voir un log du type:
 
 Dans les choses importantes ici:
 
- > Completed initialization in 1 ms
+> Completed initialization in 1 ms
 
 indique que le processus s'est bien passé
 
 Un peu plus haut:
 
-> TomcatWebServer  : Tomcat started on port 8080 (http) with context path '/'
+> TomcatWebServer : Tomcat started on port 8080 (http) with context path '/'
 
 Nous indique que le serveur lancé (Tomcat) tourne sur le port 8080 avec un contexte à la racine (/).
 
-Ouvrez un navigateur et pointez le sur localhost:8080. Que voyez vous ? Pourquoi
+Ouvrez un navigateur et pointez le sur [localhost:8080](http://localhost:8080/). Que voyez vous ? Pourquoi
 
-```
+```bash
 Whitelabel Error Page
 This application has no explicit mapping for /error, so you are seeing this as a fallback.
 
@@ -146,38 +146,38 @@ No static resource .
 ...
 ```
 
-Ceci est un message d'erreur - mais qui confirme que tout est en place - le serveur tourne bien - mais on ne lui a rien donné à afficher à cet endroit (vous voyez le code d'erreur [HTTP standard 404]() - donc que la page n'est pas trouvée).
+Ceci est un message d'erreur - mais qui confirme que tout est en place - le serveur tourne bien - mais on ne lui a rien donné à afficher à cet endroit (vous voyez le code d'erreur HTTP standard 404 - donc que la page n'est pas trouvée).
 
 La lecture du terminal et des erreurs dans le navigateur est une compétence critique à développer pour comprendre ce qui se passe dans vos applications.
 
 ### L'IDE et vous
 
-Intellij nous aide énormément ici - et c'est le but de ces outils ! Gardez toute fois à l'esprit de ne pas trop dépendre d'une "magie" potentiellement incomprise. 
+IntelliJ nous aide énormément ici - et c'est le but de ces outils ! Gardez toute fois à l'esprit de ne pas trop dépendre d'une "magie" potentiellement incomprise.
 
 On peut arriver exactement au même endroit sans l'aide de l'IDE (ou avec une autre comme VS Code, etc)
 
-- Générer le projet via [Initializr](https://start.spring.io/index.html) - récupérer le zip et l'extraire dans un folder
-- Excuter l'application directement avec Maven:
+- Générer le projet via [Initializr](https://start.spring.io/) - récupérer le zip et l'extraire dans un folder
+- Exécuter l'application directement avec Maven:
 
 ```bash
      .\mvnw spring-boot:run
 ```
 
-De manière générale, essayez toujours de regarder ce que fait l'outil derrière un point de menu - la réalité c'est le système de ficiher et ce qui est exécuté par la machine.
+De manière générale, essayez toujours de regarder ce que fait l'outil derrière un point de menu - la réalité c'est le système de fichier et ce qui est exécuté par la machine.
 
 ## Un premier endpoint
 
-Il est maintenant temps de configurer une url et de renvoyer un message. Pour faire simple nous allons faire un premier "endpoint" (une url exposée par l'API) sur le chemin /hello qui va renovyer un simple message (en JSON):
+Il est maintenant temps de configurer une url et de renvoyer un message. Pour faire simple nous allons faire un premier "endpoint" (une url exposée par l'API) sur le chemin /hello qui va renvoyer un simple message (en JSON):
 
+/hello
 
- /hello
 ```json
 {
     "message": "Hello"
 }
 ```
 
-Pour ce faire nous allons créer un package "controller" et dedans une classe HelloController.java avec le code suivant:
+Pour ce faire nous allons créer un package "controllers" et dedans une classe HelloController.java avec le code suivant:
 
 ```java
 package be.vinci.cae.fiche1.controllers;
@@ -197,11 +197,11 @@ public class HelloController {
 }
 ```
 
-Faite attention au bon placement et nommage des fichiers - Java suppose un lien direct entre les noms de classe et de package et leur position dans le répertoire. Le classe ci-dessus doit donc être dans /src/main/be/vinci/cae/fiche1/controllers/HelloController.java
+Faite attention au bon placement et nommage des fichiers - Java suppose un lien direct entre les noms de classe et de package et leur position dans le répertoire. La classe ci-dessus doit donc être dans /src/main/be/vinci/cae/fiche1/controllers/HelloController.java
 
-Si vous avez nommé votre projet/package différent cela peut être une autre localisation. L'important est d'être consistant.
+Si vous avez nommé votre projet/package différemment cela peut être une autre localisation. L'important est d'être consistant.
 
-Rouvrez votre navigateur et pointez le sur `localhost:8080/hello/` (attenion le "/" à la fin est important - on y revient) - vous devriez voir le message "Hello World!".
+Rouvrez votre navigateur et pointez le sur `localhost:8080/hello/` (attention le "/" à la fin est important - on y revient) - vous devriez voir le message "Hello World!".
 
 Prenons un peu de temps pour détailler le code ligne par ligne
 
@@ -211,7 +211,7 @@ Prenons un peu de temps pour détailler le code ligne par ligne
 public class HelloController {
 ```
 
-Spring fonctionne avec des annotation plutôt qu'avec un fichier de configuration (par exemple un XML comme utilisé dans des [versions précédentes](https://docs.spring.io/spring-framework/docs/4.2.x/spring-framework-reference/html/xsd-configuration.html)).
+Spring fonctionne avec des annotations plutôt qu'avec un fichier de configuration (par exemple un XML comme utilisé dans des [versions précédentes](https://docs.spring.io/spring-framework/docs/4.2.x/spring-framework-reference/html/xsd-configuration.html)).
 
 Celles ci indiquent:
 
@@ -225,7 +225,7 @@ Au niveau de la méthode:
     public String hello() {
 ```
 
-La méthode dispose de son propre mapping - ici "/" - ce code sera donc exécuté à /hello/ - d'autres méthode de la même classe pourraient être crées avec des mapping different. On note également que c'est un GetMapping - la méthod est donc appellée si on envoie un GET /hello/ (pas un POST ou PUT).
+La méthode dispose de son propre mapping - ici "/" - ce code sera donc exécuté à /hello/ - d'autres méthodes de la même classe pourraient être crées avec des mapping diffèrent. On note également que c'est un GetMapping - la méthode est donc appelée si on envoie un GET /hello/ (pas un POST ou PUT).
 
 Ne reste qu'a renvoyer le résultat que l'on peut voir à l'écran. Modifiez le string, rechargez la page - le résultat est mis à jour - Spring recharge ici tout le code à chaque visite - c'est donc (un peu plus) lent, mais pratique lorsque l'on développe (cela évite de devoir couper/relancer le serveur à chaque changement).
 
@@ -237,7 +237,6 @@ Une note importante sur les mappings - comme leur nom l'indique il ne s'agit que
 ```
 
 Ceci vous permet d'utiliser indifféremment `localhost:8080/hello/` ou `localhost:8080/hello`.
-
 
 ### Avec du vrai JSON dedans
 
@@ -255,7 +254,7 @@ Petit changement simple - on ne renvoie plus un String mais une Map avec notre m
 
 ### Requête et paramètres
 
-Nous allong améliorer un peu notre API pour qu'elle puisse souhaiter correctement bonjour à la personne qui fait l'appel. Le but est qu'en faisant /hello/?name=Martin on récupère:
+Nous allons améliorer un peu notre API pour qu'elle puisse souhaiter correctement bonjour à la personne qui fait l'appel. Le but est qu'en faisant /hello/?name=Martin on récupère:
 
 ```json
 { "message": "Hello Martin" }
@@ -270,7 +269,8 @@ public Map<String,String> hello(@RequestParam String name) {
         return data;
     }
 ```
-On ajouter un paramètre à la methode - en le préfixant avec l'annotation @RequestParam qui indique à Spring que l'on s'attend à ce que ce paramètre soit fourni via l'url - Spring va alors le récupérer et le passer à la méthode.
+
+On ajouter un paramètre à la méthode - en le préfixant avec l'annotation @RequestParam qui indique à Spring que l'on s'attend à ce que ce paramètre soit fourni via l'url - Spring va alors le récupérer et le passer à la méthode.
 
 Testez votre url avec un nom comme plus haut, puis sans (simplement /hello/) - que se passe-t-il ? Pourquoi ?
 
@@ -296,16 +296,14 @@ Pour information, il est également possible d'écrire ceci avec un [Optional](h
 
 Il est possible de tester notre endpoint de différente manières - la plus simple étant via la ligne de commande avec curl:
 
+{% raw %}
 ```bash
 > curl http://localhost:8080/hello/?name=Leila
 {"message":"Hello Leila"}
 ```
 
-On peut également créer un ficher de test dans Intellij, dans le folder src/test/ nommé hello.http.
-Pour faire ceci, faite un clic droit sur le dossier test et « New » -> « HTTP request »
+On peut également créer un ficher de test dans IntelliJ, dans le folder src/test/ nommé hello.http. Pour faire ceci, faite un clic droit sur le dossier test et « New » -> « HTTP request »
 
-
-{% raw %}
 ```http
 @baseUrl = http://localhost:8080
 
@@ -317,9 +315,9 @@ GET {{baseUrl}}/hello/?name=Sarah
 ```
 {% endraw %}
 
-Une fois le fichier sauvegardé il est possible de lancer ces test avec un bouton de droite > Run All
+Une fois le fichier sauvegardé il est possible de lancer ces tests avec un bouton de droite > Run All
 
-Intellij va alors exécuter chaque requête présente et sauvegarder les résultats dans des fichiers json. L'avantage sur les méthodes manuelles est que quand l'application devient plus complexe, ces éléments ne doivent pas être réecrit à chaque fois.
+IntelliJ va alors exécuter chaque requête présente et sauvegarder les résultats dans des fichiers json. L'avantage sur les méthodes manuelles est que quand l'application devient plus complexe, ces éléments ne doivent pas être réécrit à chaque fois.
 
 Mieux encore il est possible de valider les résultats:
 
@@ -360,19 +358,20 @@ GET {{baseUrl}}/hello/?name=Sarah
 ```
 {% endraw %}
 
-Ie dans l'ordre:
+Les tests vérifient dans l'ordre:
+
 - Vérifier que la réponse HTTP est bien 200 (donc qu'il n'y a pas d'erreur)
 - Vérifier que l'on renvoie bien du json
-- Vérifier que ce que l'on recoit est ce qui est attendu (à savoir "Hello World" ou "Hello /name/" si le paramètre est fourni.)
+- Vérifier que ce que l'on reçoit est ce qui est attendu (à savoir "Hello World" ou "Hello /name/" si le paramètre est fourni.)
 
 Le concept ici est celui de Tests Unitaires que vous avez sans doute déjà vu (via JUnit ou autre): on fait un appel avec des paramètres fixé et on vérifie que le résultat est confirme à la spécification.
 
 ## Un second endpoint
 
-Notre service va en plus du endpoint /hello fournir une liste de citations sur le endpoint /quotes.
-Une citation a un titre et un auteur:
+Notre service va en plus du endpoint /hello fournir une liste de citations sur le endpoint /quotes. Une citation a un titre et un auteur:
 
 > No one returns from a long journey the same person they were before.",
+> 
 > - Zen Proverb
 
 Notre service va renvoyer 10 quotes quand appelé.
@@ -430,7 +429,6 @@ public class Quote {
 
 Le code en question est simple mais verbeux - nous pouvons le rendre beaucoup plus court grâce aux annotation de Lombok - le code suivant est équivalent à celui plus haut:
 
-
 ```java
 @Data
 @AllArgsConstructor
@@ -442,23 +440,23 @@ public class Quote {
 ```
 
 Les trois annotations ont chacune un rôle:
+
 - @Data génère des getters, setters hashCode & equals
 - @AllArgsConstructor génère un constructeur avec tous les attributes de classe
-- @NoArgsConstructor génère un constructeur vide (souvent nécessaire pour la sérialization)
+- @NoArgsConstructor génère un constructeur vide (souvent nécessaire pour la sérialisation)
 
 Le code est plus court et surtout plus facile à maintenir - rien n'empêche de créer des setter/getter custom plus tard si le besoin s'en fait sentir.
 
 ### Services et injection de dépendances
 
-Nous pourrions placer le code qui crée et renvoie les quotes directement dans le controller - mais les bonnes pratique sont de séparer les rôles:
+Nous pourrions placer le code qui crée et renvoie les quotes directement dans le controller - mais les bonnes pratiques sont de séparer les rôles:
 
 - Le controller gère les request/response (récupère des paramètre http, renvoie du JSON, etc) donc les aspect "web"
 - Le service gère la logique métier
 
 (ou à l'inverse, un controller ne s'occupe pas de logique métier et aucun concept "http" ne devraient être présents dans un service).
 
-On va donc créer un QuoteService pour créer et renvoyer nos Quotes dans un package services:
-
+On va donc créer un QuotesService pour créer et renvoyer nos Quotes dans un package services:
 
 ```java
 @Service
@@ -497,8 +495,7 @@ public class QuotesController {
 
 On crée un attribute "quotesService" dans le controller, initialisé dans le constructeur et... c'est tout.
 
-Grâce aux différentes annotations (@Service, @Controller), spring va automatiquement créer les instances nécessaires de QuoteController et QuoteService, et s'assurer que l'instance de QuoteService est bien passée au QuotesController à la création.
-Retour à /quotes dans le navigateur pour vérifier que l'on voit bien les différentes Quote en JSON.
+Grâce aux différentes annotations (@Service, @Controller), spring va automatiquement créer les instances nécessaires de QuotesController et QuoteService, et s'assurer que l'instance de QuoteService est bien passée au QuotesController à la création. Retour à /quotes dans le navigateur pour vérifier que l'on voit bien les différentes Quote en JSON.
 
 ### Récapitulatif Spring
 
@@ -515,11 +512,11 @@ Au passage on a vu avec Lombok comment écrire des modèles en quelques lignes.
 Pour récapituler tout ceci, vous allez créer un nouveau endpoint qui renvoie une liste de restaurant.
 
 Un restaurant a:
+
 - Un nom
 - Un type de cuisine
 
-L'url /restaurants doit renvoyer 10 restaurants.
-Il est possible de passer un paramètre "cuisine" - le endpoint ne doit alors renvoyer que les restaurants de ce type
+L'url /restaurants doit renvoyer 10 restaurants. Il est possible de passer un paramètre "cuisine" - le endpoint ne doit alors renvoyer que les restaurants de ce type
 
 /restaurants?cuisine=Indien
 
@@ -552,13 +549,12 @@ String[][] restaurants = {
 };
 ```
 
-Comme dans les exercices dirigés, soyez sur de progresser par étape et de tester régulièrement. Une démarche possible parmis d'autres:
+Comme dans les exercices dirigés, soyez sur de progresser par étape et de tester régulièrement. Une démarche possible parmi d'autres:
 
-- Créer le controlleur (avec ses annotations) et renvoyer une simple chaine de caractère. Tester (avec le navigateur)
-- Retrouer un array (avec des valeurs fixes) à la place de la chaine. Tester (avec une request http)
-- Créer le service avec le même code que le controlleur
+- Créer le controller (avec ses annotations) et renvoyer une simple chaine de caractère. Tester (avec le navigateur)
+- Retrouver un array (avec des valeurs fixes) à la place de la chaine. Tester (avec une request http)
+- Créer le service avec le même code que le controller
 - Mettre à jour le controller pour utiliser le service (en utilisant Spring pour injecter la dépendance). Tester que tout fonctionne pareil qu'avant
-- Créer le modèle et adapter la méthode du service pour créer des Restaurant plutôt que de simple chaines de caract!res. Tester que vous avez bien les données complètes
+- Créer le modèle et adapter la méthode du service pour créer des Restaurant plutôt que de simple chaines de caractères. Tester que vous avez bien les données complètes
 
 De manière générale, éviter d'écrire plus de quelques lignes de code entre chaque test.
-
