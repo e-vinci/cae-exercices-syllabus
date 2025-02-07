@@ -165,7 +165,7 @@ Dans le second écran, sélectionnez:
 - Lombok
 - Spring Web
 - Spring Data JPA
-- Postgres Database
+- Postgres Driver
 
 Appuyez sur créer.
 
