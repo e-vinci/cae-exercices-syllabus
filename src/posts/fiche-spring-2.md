@@ -109,6 +109,15 @@ services:
 
 Pour rappel, Docker permet de démarrer des "container", sorte de machines virtuelles avec un simple `docker-compose up` dans le répertoire. Vous devez pour cela toutefois avoir le docker dameon actif sur votre machine. En majorité en Windows ceci se fait via [Docker Desktop](https://docs.docker.com/desktop/setup/install/windows-install/).
 
+> Il se peut que l'installation de docker desktop demande "d'upgrader wsl". Ceci peut être fait en ouvrant n'importe quel terminal (cmd ou power shell) avec les droits d'admin puis taper:
+
+```bash
+wsl --update
+```
+
+> Si vous tentez de faire tourner à la fois le docker fourni et un postgresql sur votre machine, vous risquez des comportement non prédictifs (vu que les deux services vont tourner sur le même port)
+
+
 Docker dépasse le cadre de ce cours, mais de manière simple la configuration indique que l'on souhaite créer un service nommé "db" qui:
 
 ```yml
@@ -143,6 +152,8 @@ Dans notre cas on reste au plus simple:
 - Mapper ce port au port 5432 de la machine hôte
 
 Vous pouvez également lancer le fichier via Intellij directement.
+
+
 
 # Exercice 
 
@@ -316,7 +327,7 @@ public class Drink {
 Au niveau de la classe, l'annotation `@Entity` indique que le modèle doit correspondre à une table.
 `@Table` permet de spécifier le nom de la table (si on ne le fait pas, JPA a des "convention" qui vont créer le nom basé sur le nom de la classe).
 
-On a rajouté un champs id - dès lors que les "Drink" vont être des lignes dans une base de données, il leur faut une clé primaire. La bonne pratique est de créer un champs dédié pour cela (plutôt que d'utiliser par exemple le nom qui pourrait ne pas être unique).
+On a rajouté un champs id - dès lors que les "Drink" vont être des lignes dans une base de données, il leur faut une clé primaire. La bonne pratique est de créer un champs dédié pour cela (plutôt que d'utiliser par exemple le nom qui pourrait ne pas être unique). N'hésitez pas à y ajoute un getter si vous voulez voir la valeur retournée par les différents services.
 
 L'annotation @Id indique que ce champs n'est pas un champs "comme les autres" - mais bien la clé primaire. `@GeneratedValue` indique que c'est la base de donnée qui va mettre cette valeur lorsqu'on fait un INSERT.
 
@@ -530,6 +541,19 @@ On peut voir une logique similaire pour des paramêtres qui font partie de l'url
 public String getDrink(@PathVariable() String id) { ...
 ```
 
+L'id fait ici partie intégrante du path (le "chemin" de l'url, soit la partie avant le "?").
+
+[Stucture d'une url](https://cdn.optinmonster.com/wp-content/uploads/2021/10/url-structure.jpg)
+
+Un controller "crud" complet devrait pouvoir gérer ces différentes requests:
+
+- GET /drinks/ => retourne toutes les boissons
+- GET /drinks/3 => retourne la boisson avec l'id 3
+- POST /drinks/ => créer un nouveau drink avec les infos postées
+- PUT /drinks/3 => met à jour la boisson ave l'id 3
+- DELETE /drinks3 => supprime la boisson avec l'id 3
+
+
 ### Repository 
 
 Le `DrinksRepository` peut déjà faire toutes ces opérations - nous n'avons qu'à les appeller correctement depuis le service.
@@ -574,3 +598,4 @@ La méthode renvoie donc un [Optional](https://docs.oracle.com/javase/8/docs/api
 Ce "pattern" permet de facilement tester si la valeur existe ou non. orElse() est une méthode d'Optional qui renvoie soit la valeur soit null si absente.
 
 Créer des fichiers http pour tester le tout.
+
