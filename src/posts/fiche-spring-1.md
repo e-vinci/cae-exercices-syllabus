@@ -428,6 +428,11 @@ public class Quote {
 }
 ```
 
+
+### Lombok
+
+> Attention chez beaucoup d'étudiant Lombok ne fonctionne pas (bien) - ou pas du tout. Si c'est le cas pour vous gardez simplement la version précédente.
+
 Le code en question est simple mais verbeux - nous pouvons le rendre beaucoup plus court grâce aux annotation de Lombok - le code suivant est équivalent à celui plus haut:
 
 
