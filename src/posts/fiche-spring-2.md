@@ -597,5 +597,150 @@ La méthode renvoie donc un [Optional](https://docs.oracle.com/javase/8/docs/api
 
 Ce "pattern" permet de facilement tester si la valeur existe ou non. orElse() est une méthode d'Optional qui renvoie soit la valeur soit null si absente.
 
-Créer des fichiers http pour tester le tout.
+## Test de la solution
+
+Pour changer on ne va pas vous demander de fournir de fichier http - il est déjà prêt. Vous pouvez vous en servir pour valider votre solution (tous les tests devraient passer). Certaines **assertions** (les client.assert) dépendent de vos données de test - elles devraient fonctionner "telles quelles" si vous avez repris crée les même "drinks" que dans notre exemple plus haut, sinon n'hésitez pas à adapter le fichier http en conséquence.
+
+
+{% raw %}
+```typescript
+@baseUrl = http://localhost:8080
+
+### Get the standard message
+GET {{baseUrl}}/drinks/
+
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+
+    client.test("Response content-type is json", function() {
+        var type = response.contentType.mimeType;
+        client.assert(type === "application/json", "Expected 'application/json' but received '" + type + "'");
+    });
+
+    client.test("Should return all drinkss", function() {
+        var body = response.body
+        console.log(body);
+        client.assert(body.length == 4, "Should return 4 drinks");
+    });
+%}
+
+### Get the custom message
+GET {{baseUrl}}/drinks/1
+
+> {%
+
+    client.test("Should return a drink with id 1", function() {
+        var body = response.body
+        console.log(body);
+        client.assert(body.id == "1", "Should be id 1");
+    });
+%}
+
+### Create a new drink
+POST {{baseUrl}}/drinks/
+Content-Type: application/json
+
+{
+    "name": "Coke",
+    "price": "1.50",
+    "description": "Yum Coke",
+    "alcoholic": false
+}
+
+### Update a drink
+PUT {{baseUrl}}/drinks/5
+Content-Type: application/json
+
+{
+    "name": "Pepsi",
+    "price": "1.50",
+    "description": "Yum Yum Pepsi",
+    "alcoholic": false
+}
+
+> {%
+
+    client.test("Should update the drink name", function() {
+        var body = response.body
+        console.log(body);
+        client.assert(body.id == "5", "Should be id 1");
+        client.assert(body.name == "Pepsi", "Should be id Pepsi");
+    });
+%}
+
+### Delete a drink
+DELETE {{baseUrl}}/drinks/5
+```
+{% endraw %}
+
+De manière générale, rien ne vous empêcherait d'écrire ce type de tests en premier (avant même d'écrire le controller) - le lancer va logiquement montrer tout des tests qui échouent. Une fois une première méthode écrite (par exemple pour /drinks) dans le controller, l'un des tests devraient passer à vert, et ainsi de suite.
+
+Cette logique d'écrire le test en premier porte un nom - [TDD - "Test Driven Development"](https://www.agilealliance.org/glossary/tdd/).
+
+## Plus loin - des relations
+
+JPA nous permet de mapper facilement une table vers une classe et des lignes vers des objets (dans les deux sens) - maintenant le sens même du modèle **relationnel** ce sont... des relations.
+
+Nous allons voir comment JPA peut gérer des relations entre différents objets (et donc entre des ligne sde tables différentes).
+
+Pour ceci, il nous faut un seconde classe - nos boissons ne sont pas disponible partout, elles sont vendues par des FoodTrucks, chacun actif dans un quartier spécifique.
+
+### FoodTrucks
+
+Avant de parler des relations entre Drinks & FoodTrucks, il nous faut créer:
+
+- Un modèle FoodTruck avec un nom et une adresse (n'oubliez pas les éléments JPA - @Entity at un id)
+- Un repository FoodTrucksRepository (simplement créer l'interface)
+- Un service avec au moins une méthode pour renvoyer tous les Trucks
+- Un controller pour les afficher
+
+Pour se faciliter les choses, on va créer deux FootTruck dans notre Application:
+
+```java
+@Bean
+    public CommandLineRunner demo(DrinksRepository repository, FoodTrucksRepository foodTrucksRepository) {
+        return (args) -> {
+            FoodTruck truck1 = foodTrucksRepository.save(new FoodTruck("Chez Momo", "Quartier Saint Boniface"));
+            FoodTruck truck2 = foodTrucksRepository.save(new FoodTruck("Ardennes", "Arlon et environs"));
+            
+            // Création des drinks commé précédemment
+```
+
+Tester avec DataGrip que les éléments sont bien insérés dans la base de données
+Tester avec le navigateur ou un fichier HTTP que /trucks renvoie bien deux trucks
+
+### Vous avez dit "relations"
+
+Dans notre modèle, nous allons imaginer qu'une boisson n'est disponible que dans un seul camion - chaque camion peut évidemment présenter plusieurs boissons !
+
+On parle d'une relation "ManyToOne" (plusieurs boissons sont disponibles dans un seul camion) - à l'opposition de "OneToOne" et de "ManyToMany". 
+
+Un exemple de relations ManyToMany est par exemple des cours et des étudiants (les étudiants ont plusieurs cours, les cours sont suivi par plusieurs étudiants).
+
+En base de donnée, notre relation pourrait se modéliser avec une clé étrangère (foreign key) de la table drinks vers la table foodtrucks ie:
+
+| id | name         | foodtruck_id |
+|----|--------------|--------------|
+| 1  | Bloody Mary  | 1            |
+| 2  | Mojito       | 1            |
+| 3  | Coca         | 1            |
+| 4  | Water        | 2            |
+
+Dans ce modèle il est possible de sélectionner toutes les boissons du truck 1 avec:
+
+```sql
+SELECT * FROM DRINKS WHERE FOODTRUCK_ID = 1
+```
+
+Je vous renvoie à vos cours de base de données pour ces différents concepts.
+
+### Recursion strikes !
+
+@JsonBackReference & @JsonManagedReference
+
+### DTO patterns
+
+
 
