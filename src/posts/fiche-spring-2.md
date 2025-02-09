@@ -694,9 +694,9 @@ Avant de parler des relations entre Drinks & FoodTrucks, il nous faut créer:
 - Un modèle FoodTruck avec un nom et une adresse (n'oubliez pas les éléments JPA - @Entity at un id)
 - Un repository FoodTrucksRepository (simplement créer l'interface)
 - Un service avec au moins une méthode pour renvoyer tous les Trucks
-- Un controller pour les afficher
+- Un controller pour les afficher (à nouveau, un seul endpoint /trucks/ est suffisant pour le moment)
 
-Pour se faciliter les choses, on va créer deux FootTruck dans notre Application:
+Pour se faciliter les choses, on va créer deux FoodTrucks dans notre Application:
 
 ```java
 @Bean
@@ -736,11 +736,111 @@ SELECT * FROM DRINKS WHERE FOODTRUCK_ID = 1
 
 Je vous renvoie à vos cours de base de données pour ces différents concepts.
 
+### Les relations avec JPA
+
+Une relation en JPA n'est jamais qu'un attribut avec une annotation spécifique
+
+```java
+
+@Entity
+@Table(name = "drinks")
+public class Drink {
+    ...
+
+    @ManyToOne
+    private FoodTruck foodTruck;
+```
+
+La relation est crée du côté "Many" (comme en based de données). On ajoute les getter & les setter comme d'habitude et... c'est tout.
+
+Ceci permet d'adapter nos créations d'objet pour associer un Truck à chaque Drink:
+
+```java
+    //Fiche2Application.java
+    @Bean
+    public CommandLineRunner demo(DrinksRepository repository, FoodTrucksRepository foodTrucksRepository) {
+        return (args) -> {
+            FoodTruck truck1 = foodTrucksRepository.save(new FoodTruck("Chez Momo", "Quartier Saint Boniface"));
+            FoodTruck truck2 = foodTrucksRepository.save(new FoodTruck("Ardennes", "Arlon et environs"));
+
+            repository.save(new Drink("Bloody Mary", "Yum totmatoes", 10.0f, true, truck1));
+            repository.save(new Drink("Mojito", "Yum mint", 8.0f, true, truck1));
+            repository.save(new Drink("Coca", "Yum sugar", 2.0f, false, truck1));
+            repository.save(new Drink("Water", "Yum water", 0.0f, false, truck2));
+        };
+    }
+```
+
+Ceci fait, retournez voir sur la page /drinks/ et vous allez trouver les références aux différents camions.
+
+### Autre direction
+
+On peut donc "suivre" un drink vers son truck (avec drink.foodTruck)... mais pas l'inverse (l'objet Truck n'a pas de référence vers Drink), ce qui serait pratique pour typiquement afficher dans une application toutes les boissons offertes par un camion précis.
+
+```java
+@Entity
+@Table(name = "foodtrucks")
+public class FoodTruck {   
+    ...
+
+    @OneToMany(mappedBy = "foodTruck")
+    private List<Drink> drinks;
+```
+
+On créer un attribute étant une liste de Drink, et on indique que cette relation est gérer de l'autre côté (par l'attribute "foodTruck" dans la classe Drink).
+
+Ne pas oubliez les getters & setters.
+
+Test à nouveau dans le browser et... que voit on ?
+
 ### Recursion strikes !
 
-@JsonBackReference & @JsonManagedReference
+Des lignes de json qui n'en finissent pas, et dans les logs une erreur:
 
-### DTO patterns
+```bash
+2025-02-09T10:48:09.424+01:00  WARN 38444 --- [fiche2-pg] [nio-8080-exec-1] .w.s.m.s.DefaultHandlerExceptionResolver : Ignoring exception, response committed already: org.springframework.http.converter.HttpMessageNotWritableException: Could not write JSON: Document nesting depth (1001) exceeds the maximum allowed (1000, from `StreamWriteConstraints.getMaxNestingDepth()`)
+2025-02-09T10:48:09.424+01:00  WARN 38444 --- [fiche2-pg] [nio-8080-exec-1] .w.s.m.s.DefaultHandlerExceptionResolver : Resolved [org.springframework.http.converter.HttpMessageNotWritableException: Could not write JSON: Document nesting depth (1001) exceeds the maximum allowed (1000, from `StreamWriteConstraints.getMaxNestingDepth()`)]
+```
+
+Quel est le problème ?
+
+- On demande d'afficher le Truck dans le json du Drink
+- On demande d'afficher les Drinks dans le json du Truck
+
+Nous avons créer un problème de récursion - le truck1 affiche le drink1 qui lui même affiche le truck1, avec une structure type:
+
+```
+- truck1
+  - name
+  - drinks
+    - drink1
+      - name
+      - truck1
+        - name
+        - drinks
+          - drink1
+            ...
+```
+
+Le json s'étend à l'infini - et à un moment Spring "tue" le processus pour l'empêcher la page de retour d'être de taille infinie.
+
+Heureusement la solution au problème est simple - indiquer à Spring (plus exactement au package Jackson qui gère la sérialisation des objets vers du json) de quel côté on veut les informations via deux annotations: `@JsonBackReference` & `@JsonManagedReference`
+
+```java
+    // FoodTruck.java
+    @OneToMany(mappedBy = "foodTruck")
+    @JsonManagedReference
+    private List<Drink> drinks;
+```
+
+```java
+    // Drink.java
+    @ManyToOne
+    @JsonBackReference
+    private FoodTruck foodTruck;
+```
+
+Le problème devrait être résolu.
 
 
 
