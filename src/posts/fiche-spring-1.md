@@ -427,7 +427,6 @@ public class Quote {
 }
 ```
 
-
 ### Lombok
 
 > Attention chez beaucoup d'étudiant Lombok ne fonctionne pas (bien) - ou pas du tout. Si c'est le cas pour vous gardez simplement la version précédente.

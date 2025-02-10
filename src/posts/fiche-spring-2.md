@@ -109,6 +109,15 @@ services:
 
 Pour rappel, Docker permet de démarrer des "container", sorte de machines virtuelles avec un simple `docker-compose up` dans le répertoire. Vous devez pour cela toutefois avoir le docker dameon actif sur votre machine. En majorité en Windows ceci se fait via [Docker Desktop](https://docs.docker.com/desktop/setup/install/windows-install/).
 
+> Il se peut que l'installation de docker desktop demande "d'upgrader wsl". Ceci peut être fait en ouvrant n'importe quel terminal (cmd ou power shell) avec les droits d'admin puis taper:
+
+```bash
+wsl --update
+```
+
+> Si vous tentez de faire tourner à la fois le docker fourni et un postgresql sur votre machine, vous risquez des comportement non prédictifs (vu que les deux services vont tourner sur le même port)
+
+
 Docker dépasse le cadre de ce cours, mais de manière simple la configuration indique que l'on souhaite créer un service nommé "db" qui:
 
 ```yml
@@ -144,6 +153,8 @@ Dans notre cas on reste au plus simple:
 
 Vous pouvez également lancer le fichier via Intellij directement.
 
+
+
 # Exercice 
 
 ### Projet
@@ -165,7 +176,7 @@ Dans le second écran, sélectionnez:
 - Lombok
 - Spring Web
 - Spring Data JPA
-- Postgres Database
+- Postgres Driver
 
 Appuyez sur créer.
 
@@ -316,7 +327,7 @@ public class Drink {
 Au niveau de la classe, l'annotation `@Entity` indique que le modèle doit correspondre à une table.
 `@Table` permet de spécifier le nom de la table (si on ne le fait pas, JPA a des "convention" qui vont créer le nom basé sur le nom de la classe).
 
-On a rajouté un champs id - dès lors que les "Drink" vont être des lignes dans une base de données, il leur faut une clé primaire. La bonne pratique est de créer un champs dédié pour cela (plutôt que d'utiliser par exemple le nom qui pourrait ne pas être unique).
+On a rajouté un champs id - dès lors que les "Drink" vont être des lignes dans une base de données, il leur faut une clé primaire. La bonne pratique est de créer un champs dédié pour cela (plutôt que d'utiliser par exemple le nom qui pourrait ne pas être unique). N'hésitez pas à y ajoute un getter si vous voulez voir la valeur retournée par les différents services.
 
 L'annotation @Id indique que ce champs n'est pas un champs "comme les autres" - mais bien la clé primaire. `@GeneratedValue` indique que c'est la base de donnée qui va mettre cette valeur lorsqu'on fait un INSERT.
 
@@ -508,6 +519,43 @@ Cela correspond assez directements aux action "CRUD" dans la base de données:
 - UPDATE WHERE ID = :id
 - DELETE WHERE ID = :id
 
+### Controller
+
+Un petit update côté Controller - on a vu comment gérer des paramères dans l'url
+
+> http://localhost:8080/drinks?name=bloody
+
+avec quelque chose comme:
+
+```java
+@GetMapping("/")
+public String hello(@RequestParam(required = false) String name) { ...
+```
+
+On peut voir une logique similaire pour des paramêtres qui font partie de l'url avec @PathVariable
+
+> http://localhost:8080/drinks/1
+
+```java
+@GetMapping("/{id}")
+public String getDrink(@PathVariable() String id) { ...
+```
+
+L'id fait ici partie intégrante du path (le "chemin" de l'url, soit la partie avant le "?").
+
+[Stucture d'une url](https://cdn.optinmonster.com/wp-content/uploads/2021/10/url-structure.jpg)
+
+Un controller "crud" complet devrait pouvoir gérer ces différentes requests:
+
+- GET /drinks/ => retourne toutes les boissons
+- GET /drinks/3 => retourne la boisson avec l'id 3
+- POST /drinks/ => créer un nouveau drink avec les infos postées
+- PUT /drinks/3 => met à jour la boisson ave l'id 3
+- DELETE /drinks3 => supprime la boisson avec l'id 3
+
+
+### Repository 
+
 Le `DrinksRepository` peut déjà faire toutes ces opérations - nous n'avons qu'à les appeller correctement depuis le service.
 
 ```java
@@ -549,4 +597,250 @@ La méthode renvoie donc un [Optional](https://docs.oracle.com/javase/8/docs/api
 
 Ce "pattern" permet de facilement tester si la valeur existe ou non. orElse() est une méthode d'Optional qui renvoie soit la valeur soit null si absente.
 
-Créer des fichiers http pour tester le tout.
+## Test de la solution
+
+Pour changer on ne va pas vous demander de fournir de fichier http - il est déjà prêt. Vous pouvez vous en servir pour valider votre solution (tous les tests devraient passer). Certaines **assertions** (les client.assert) dépendent de vos données de test - elles devraient fonctionner "telles quelles" si vous avez repris crée les même "drinks" que dans notre exemple plus haut, sinon n'hésitez pas à adapter le fichier http en conséquence.
+
+
+{% raw %}
+```typescript
+@baseUrl = http://localhost:8080
+
+### Get the standard message
+GET {{baseUrl}}/drinks/
+
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+
+    client.test("Response content-type is json", function() {
+        var type = response.contentType.mimeType;
+        client.assert(type === "application/json", "Expected 'application/json' but received '" + type + "'");
+    });
+
+    client.test("Should return all drinkss", function() {
+        var body = response.body
+        console.log(body);
+        client.assert(body.length == 4, "Should return 4 drinks");
+    });
+%}
+
+### Get the custom message
+GET {{baseUrl}}/drinks/1
+
+> {%
+
+    client.test("Should return a drink with id 1", function() {
+        var body = response.body
+        console.log(body);
+        client.assert(body.id == "1", "Should be id 1");
+    });
+%}
+
+### Create a new drink
+POST {{baseUrl}}/drinks/
+Content-Type: application/json
+
+{
+    "name": "Coke",
+    "price": "1.50",
+    "description": "Yum Coke",
+    "alcoholic": false
+}
+
+### Update a drink
+PUT {{baseUrl}}/drinks/5
+Content-Type: application/json
+
+{
+    "name": "Pepsi",
+    "price": "1.50",
+    "description": "Yum Yum Pepsi",
+    "alcoholic": false
+}
+
+> {%
+
+    client.test("Should update the drink name", function() {
+        var body = response.body
+        console.log(body);
+        client.assert(body.id == "5", "Should be id 1");
+        client.assert(body.name == "Pepsi", "Should be id Pepsi");
+    });
+%}
+
+### Delete a drink
+DELETE {{baseUrl}}/drinks/5
+```
+{% endraw %}
+
+De manière générale, rien ne vous empêcherait d'écrire ce type de tests en premier (avant même d'écrire le controller) - le lancer va logiquement montrer tout des tests qui échouent. Une fois une première méthode écrite (par exemple pour /drinks) dans le controller, l'un des tests devraient passer à vert, et ainsi de suite.
+
+Cette logique d'écrire le test en premier porte un nom - [TDD - "Test Driven Development"](https://www.agilealliance.org/glossary/tdd/).
+
+## Plus loin - des relations
+
+JPA nous permet de mapper facilement une table vers une classe et des lignes vers des objets (dans les deux sens) - maintenant le sens même du modèle **relationnel** ce sont... des relations.
+
+Nous allons voir comment JPA peut gérer des relations entre différents objets (et donc entre des ligne sde tables différentes).
+
+Pour ceci, il nous faut un seconde classe - nos boissons ne sont pas disponible partout, elles sont vendues par des FoodTrucks, chacun actif dans un quartier spécifique.
+
+### FoodTrucks
+
+Avant de parler des relations entre Drinks & FoodTrucks, il nous faut créer:
+
+- Un modèle FoodTruck avec un nom et une adresse (n'oubliez pas les éléments JPA - @Entity at un id)
+- Un repository FoodTrucksRepository (simplement créer l'interface)
+- Un service avec au moins une méthode pour renvoyer tous les Trucks
+- Un controller pour les afficher (à nouveau, un seul endpoint /trucks/ est suffisant pour le moment)
+
+Pour se faciliter les choses, on va créer deux FoodTrucks dans notre Application:
+
+```java
+@Bean
+    public CommandLineRunner demo(DrinksRepository repository, FoodTrucksRepository foodTrucksRepository) {
+        return (args) -> {
+            FoodTruck truck1 = foodTrucksRepository.save(new FoodTruck("Chez Momo", "Quartier Saint Boniface"));
+            FoodTruck truck2 = foodTrucksRepository.save(new FoodTruck("Ardennes", "Arlon et environs"));
+            
+            // Création des drinks commé précédemment
+```
+
+Tester avec DataGrip que les éléments sont bien insérés dans la base de données
+Tester avec le navigateur ou un fichier HTTP que /trucks renvoie bien deux trucks
+
+### Vous avez dit "relations"
+
+Dans notre modèle, nous allons imaginer qu'une boisson n'est disponible que dans un seul camion - chaque camion peut évidemment présenter plusieurs boissons !
+
+On parle d'une relation "ManyToOne" (plusieurs boissons sont disponibles dans un seul camion) - à l'opposition de "OneToOne" et de "ManyToMany". 
+
+Un exemple de relations ManyToMany est par exemple des cours et des étudiants (les étudiants ont plusieurs cours, les cours sont suivi par plusieurs étudiants).
+
+En base de donnée, notre relation pourrait se modéliser avec une clé étrangère (foreign key) de la table drinks vers la table foodtrucks ie:
+
+| id | name         | foodtruck_id |
+|----|--------------|--------------|
+| 1  | Bloody Mary  | 1            |
+| 2  | Mojito       | 1            |
+| 3  | Coca         | 1            |
+| 4  | Water        | 2            |
+
+Dans ce modèle il est possible de sélectionner toutes les boissons du truck 1 avec:
+
+```sql
+SELECT * FROM DRINKS WHERE FOODTRUCK_ID = 1
+```
+
+Je vous renvoie à vos cours de base de données pour ces différents concepts.
+
+### Les relations avec JPA
+
+Une relation en JPA n'est jamais qu'un attribut avec une annotation spécifique
+
+```java
+
+@Entity
+@Table(name = "drinks")
+public class Drink {
+    ...
+
+    @ManyToOne
+    private FoodTruck foodTruck;
+```
+
+La relation est crée du côté "Many" (comme en based de données). On ajoute les getter & les setter comme d'habitude et... c'est tout.
+
+Ceci permet d'adapter nos créations d'objet pour associer un Truck à chaque Drink:
+
+```java
+    //Fiche2Application.java
+    @Bean
+    public CommandLineRunner demo(DrinksRepository repository, FoodTrucksRepository foodTrucksRepository) {
+        return (args) -> {
+            FoodTruck truck1 = foodTrucksRepository.save(new FoodTruck("Chez Momo", "Quartier Saint Boniface"));
+            FoodTruck truck2 = foodTrucksRepository.save(new FoodTruck("Ardennes", "Arlon et environs"));
+
+            repository.save(new Drink("Bloody Mary", "Yum totmatoes", 10.0f, true, truck1));
+            repository.save(new Drink("Mojito", "Yum mint", 8.0f, true, truck1));
+            repository.save(new Drink("Coca", "Yum sugar", 2.0f, false, truck1));
+            repository.save(new Drink("Water", "Yum water", 0.0f, false, truck2));
+        };
+    }
+```
+
+Ceci fait, retournez voir sur la page /drinks/ et vous allez trouver les références aux différents camions.
+
+### Autre direction
+
+On peut donc "suivre" un drink vers son truck (avec drink.foodTruck)... mais pas l'inverse (l'objet Truck n'a pas de référence vers Drink), ce qui serait pratique pour typiquement afficher dans une application toutes les boissons offertes par un camion précis.
+
+```java
+@Entity
+@Table(name = "foodtrucks")
+public class FoodTruck {   
+    ...
+
+    @OneToMany(mappedBy = "foodTruck")
+    private List<Drink> drinks;
+```
+
+On créer un attribute étant une liste de Drink, et on indique que cette relation est gérer de l'autre côté (par l'attribute "foodTruck" dans la classe Drink).
+
+Ne pas oubliez les getters & setters.
+
+Test à nouveau dans le browser et... que voit on ?
+
+### Recursion strikes !
+
+Des lignes de json qui n'en finissent pas, et dans les logs une erreur:
+
+```bash
+2025-02-09T10:48:09.424+01:00  WARN 38444 --- [fiche2-pg] [nio-8080-exec-1] .w.s.m.s.DefaultHandlerExceptionResolver : Ignoring exception, response committed already: org.springframework.http.converter.HttpMessageNotWritableException: Could not write JSON: Document nesting depth (1001) exceeds the maximum allowed (1000, from `StreamWriteConstraints.getMaxNestingDepth()`)
+2025-02-09T10:48:09.424+01:00  WARN 38444 --- [fiche2-pg] [nio-8080-exec-1] .w.s.m.s.DefaultHandlerExceptionResolver : Resolved [org.springframework.http.converter.HttpMessageNotWritableException: Could not write JSON: Document nesting depth (1001) exceeds the maximum allowed (1000, from `StreamWriteConstraints.getMaxNestingDepth()`)]
+```
+
+Quel est le problème ?
+
+- On demande d'afficher le Truck dans le json du Drink
+- On demande d'afficher les Drinks dans le json du Truck
+
+Nous avons créer un problème de récursion - le truck1 affiche le drink1 qui lui même affiche le truck1, avec une structure type:
+
+```
+- truck1
+  - name
+  - drinks
+    - drink1
+      - name
+      - truck1
+        - name
+        - drinks
+          - drink1
+            ...
+```
+
+Le json s'étend à l'infini - et à un moment Spring "tue" le processus pour l'empêcher la page de retour d'être de taille infinie.
+
+Heureusement la solution au problème est simple - indiquer à Spring (plus exactement au package Jackson qui gère la sérialisation des objets vers du json) de quel côté on veut les informations via deux annotations: `@JsonBackReference` & `@JsonManagedReference`
+
+```java
+    // FoodTruck.java
+    @OneToMany(mappedBy = "foodTruck")
+    @JsonManagedReference
+    private List<Drink> drinks;
+```
+
+```java
+    // Drink.java
+    @ManyToOne
+    @JsonBackReference
+    private FoodTruck foodTruck;
+```
+
+Le problème devrait être résolu.
+
+
+
