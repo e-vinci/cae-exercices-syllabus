@@ -1,7 +1,7 @@
 ---
 title: Fiche 3
 description: Spring et sécurité.
-permalink: posts/{{ title | slug }}/index.html
+permalink: false
 date: '2025-01-30'
 tags: [fiche, spring]
 ---
