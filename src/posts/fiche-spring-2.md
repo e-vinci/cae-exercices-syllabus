@@ -104,7 +104,7 @@ services:
       POSTGRES_USER: cae_user
       POSTGRES_PASSWORD: cae
     ports:
-      - "5432:5432"
+      - "5433:5432"
 ```
 
 Pour rappel, Docker permet de démarrer des "container", sorte de machines virtuelles avec un simple `docker-compose up` dans le répertoire. Vous devez pour cela toutefois avoir le docker dameon actif sur votre machine. En majorité en Windows ceci se fait via [Docker Desktop](https://docs.docker.com/desktop/setup/install/windows-install/).
@@ -141,15 +141,15 @@ Créer un user "cae_user" avec son password "cae" sur une base de données "cae_
 
 ```yaml
     ports:
-      - "5432:5432"
+      - "5433:5432"
 ```
 
-Ce service va tourner sur le port 5432 - pourquoi alors deux ports ? (`5432:5432`) - parce que la machine dans laquelle va tourner PG n'est pas la vôtre - c'est un container distinct qui a donc ses propres ports. Ceux-ci sont "mappés" aux port de votre machine physique, et peuvent l'être sur des valeurs différentes.
+Ce service va tourner sur le port 5432 - pourquoi alors deux ports ? (`5433:5432`) - parce que la machine dans laquelle va tourner PG n'est pas la vôtre - c'est un container distinct qui a donc ses propres ports. Ceux-ci sont "mappés" aux port de votre machine physique, et peuvent l'être sur des valeurs différentes. Nous rendons PG accessible sur un autre port que celui par défaut pour éviter un problème pour ceux qui ont également postgresql installé sur leur machine.
 
 Dans notre cas on reste au plus simple:
 
 - Faire tourner PG sur le port 5432 sur le container
-- Mapper ce port au port 5432 de la machine hôte
+- Mapper ce port au port 5433 de la machine hôte
 
 Vous pouvez également lancer le fichier via Intellij directement.
 
@@ -195,7 +195,7 @@ Ouvrez le fichier application.properties et ajoutez les éléments suivants:
 spring.datasource.driver-class-name=org.postgresql.Driver
 spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect
 
-spring.datasource.url=jdbc:postgresql://localhost:5432/cae_db
+spring.datasource.url=jdbc:postgresql://localhost:5433/cae_db
 spring.datasource.username=cae_user
 spring.datasource.password=cae
 
@@ -298,11 +298,13 @@ public class DrinksController {
 
 Temps de tester tout ceci (via le navigateur) - et de créer un petit fichier http pour facilement vérifier les résultats:
 
-```http
+{% raw %}
+```sh
 ### Read all drinks with File variable
 @baseUrl = http://localhost:8080
 GET {{baseUrl}}/drinks/
 ```
+{% endraw %}
 
 Nous sommes plus ou moins de retour au résultat précédent - on va maintenant introduire nos Entités et Repository.
 
@@ -654,6 +656,7 @@ PUT {{baseUrl}}/drinks/5
 Content-Type: application/json
 
 {
+    "id": 5,
     "name": "Pepsi",
     "price": "1.50",
     "description": "Yum Yum Pepsi",
