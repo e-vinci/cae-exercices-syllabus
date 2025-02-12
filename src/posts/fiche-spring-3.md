@@ -1,7 +1,7 @@
 ---
 title: Fiche 3
 description: Spring et sécurité.
-permalink: false
+permalink: posts/{{ title | slug }}/index.html
 date: '2025-01-30'
 tags: [fiche, spring]
 ---
@@ -89,9 +89,180 @@ Création dans IntelliJ ("New" -> "Documentation"), onglet de prévisualisation.
 Génération de documentation pdf.
 Génération de code starter.
 
-# Exercices récapitulatif
+# Exercices récapitulatifs
 
 ## Documentation -> Code
 
+Sur base de la documentation fournie ci-dessous, vous devez développer une API en spring répondant aux besoins demandés.
+
+```yaml
+openapi: 3.0.0
+info:
+  title: API de Gestion de Bibliothèque
+  description: API simplifiée pour gérer les livres et les utilisateurs dans une bibliothèque.
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8080
+    description: Serveur de développement local
+
+paths:
+  /books:
+    get:
+      summary: Récupérer la liste des livres
+      parameters:
+        - in: query
+          name: titleContains
+          required: false
+          schema:
+            type: string
+          description: Filtrer les livres dont le titre contient cette chaîne
+      responses:
+        '200':
+          description: Liste des livres
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Book'
+
+    post:
+      summary: Ajouter un nouveau livre
+      security:
+        - jwt: ['user']
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Book'
+      responses:
+        '201':
+          description: Livre créé
+        '400':
+          description: Requête invalide
+        '401':
+          description: Non autorisé
+
+  /books/{id}:
+    get:
+      summary: Récupérer un livre par ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: ID du livre
+      responses:
+        '200':
+          description: Livre trouvé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Book'
+        '404':
+          description: Livre non trouvé
+
+    delete:
+      summary: Supprimer un livre
+      security:
+        - jwt: ['admin']
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: ID du livre
+      responses:
+        '204':
+          description: Livre supprimé
+        '401':
+          description: Non autorisé
+        '403':
+          description: Accès interdit
+        '404':
+          description: Livre non trouvé
+
+  /users:
+    get:
+      summary: Récupérer la liste des utilisateurs
+      security:
+        - jwt: ['admin']
+      responses:
+        '200':
+          description: Liste des utilisateurs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+        '401':
+          description: Non autorisé
+        '403':
+          description: Accès interdit
+
+    post:
+      summary: Ajouter un nouvel utilisateur
+      security:
+        - jwt: ['admin']
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '201':
+          description: Utilisateur créé
+        '400':
+          description: Requête invalide
+        '401':
+          description: Non autorisé
+
+components:
+  schemas:
+    Book:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        author:
+          type: string
+        publishedYear:
+          type: integer
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+          enum: ['admin', 'user']
+
+  securitySchemes:
+    jwt:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Authentification par token JWT
+```
+
+Note: Cette documentation a été générée avec une IA. Que pensez vous de la qualité de cette documentation, notamment dans les descriptions fournies ? 
+
+Une documentation ne peut être utile que si elle est parfaitement correcte et répond à un maximum des questions que peut se poser un utilisateur.
+
 ## Code -> Documentation
+
+Créez la documentation de l'API disponible à l'adresse [github.com/e-vinci/cae-exercices-exemple](https://github.com/e-vinci/cae-exercices-exemple). N'hésitez pas à récupérer cette API sur votre machine et à la tester pour vous assurer de bien comprendre son fonctionnement.
 
