@@ -258,6 +258,8 @@ On a maintenant toutes les pièces pour pouvoir logger correctement un utilisate
     }
 ```
 
+(rajoutez la méthode `findByUsername` si elle n'existe pas encore sur le UserService)
+
 Celle ci fait donc trois opérations:
 
 - Récupère un user dans la base de données basé sur le username
@@ -281,13 +283,274 @@ La méthode délègue cette opération au package JWT, sur base du token fourni,
 
 Reste à s'assurer que toutes les (autres) méthodes vérifient bien le token à chaque appel 
 
-### Configuration de Spring Security
+### Création d'un filtre de vérification
 
-Créer le fichier filtre, qui vérifie le token jwt avec java-jwt. Le secret y est encore hardcodé.
-Créer le fichier de configuration de Spring Security, qui définit method security et l'utilisation du filtre.
-Ajouter les annotations de sécurité sur les routes qui en ont besoin :
-- Créer, supprimer et éditer une pizza pour les admins
-- Commander une pizza pour les utilisateurs connectés
+Spring Security nous permet de définir des "filtres" - des classes qui vont agir à chaque requête et les modifier voir les bloquer si certaines conditions ne sont pas remplies.
+
+Nous allons créer un JWTAuthentificationFilter qui va vérifier si le token est correct à chaque requête:
+
+
+```java
+@Configuration
+public class JWTAuthentificationFilter  extends OncePerRequestFilter {
+
+    private final UserService userService;
+
+    public JWTAuthentificationFilter(UserService userService) {
+        this.userService = userService;
+    }
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+        String token = request.getHeader("Authorization");
+        if (token != null) {
+            userService.verifyJwtToken(token);
+        }
+        filterChain.doFilter(request, response);
+    }
+}
+```
+
+Le code en soit n'est pas bien complexe:
+
+- La méthode "doFilterInternal" est appellée par Spring à chaque requête (on va voir juste après comment)
+- Elle récupère le header "Authorization", et appelle le service pour vérifier le token
+- On ne fait rien d'autre - parce que le service va lever une exception si le token n'est pas correct (et donc arrêter la requête)
+
+### Configuration de la sécurité
+
+Reste à lier le tout avec un fichier de configuration:
+
+```java  
+@Configuration
+@EnableWebSecurity
+@EnableMethodSecurity()
+public class SecurityConfiguration {
+
+    private final JWTAuthentificationFilter jwtAuthenticationFilter;
+
+    public SecurityConfiguration(JWTAuthentificationFilter jwtAuthenticationFilter) {
+        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+    }
+
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        return http
+                .csrf(AbstractHttpConfigurer::disable)
+                .sessionManagement(sessionManagement ->
+                        sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .build();
+    }
+}
+```
+
+Du côté annotation, en plus du @Configuration on trouve:
+
+- @EnableWebSecurity
+- @EnableMethodSecurity()
+
+qui vont nous permettre de définir pour chaque méthode les droits nécessaires.
+
+La classe récupère notre filtre (via injection), et configure toute requête HTTP avec les opérations suivantes:
+
+- Désactiver les [CSRF](https://en.wikipedia.org/wiki/Cross-site_request_forgery) - "Cross Site Request Forgery" - un mécanisme permettant de bloquer les requêtes venant d'un domaine différent. Quelque chose de logique dans une application backend, mais qui bloquerait toutes les requêtes d'une application type "SPA" (vu que le client tourne sur une autre url)
+- Indiquer que les sessions sont STATELESS (sans état, le mode par défaut)
+- Indiquer que notre filtre doit être appellé avant celui standard de Spring
+
+### Test!
+
+Il est plus que temps de tester tout ceci - un petit fichier .http devrait faire l'affaire:
+
+```bash
+@baseUrl = http://localhost:8080
+
+### Try to login an unknow user
+POST {{baseUrl}}/auths/login
+Content-Type: application/json
+
+{
+  "username":"unknown",
+  "password":"admin"
+}
+
+### Login the default admin
+POST {{baseUrl}}/auths/login
+Content-Type: application/json
+
+{
+  "username":"admin",
+  "password":"admin"
+}
+
+
+### Create the manager user
+POST {{baseUrl}}/auths/register
+Content-Type: application/json
+
+{
+  "username":"manager",
+  "password":"manager"
+}
+
+### Login the manager user
+POST {{baseUrl}}/auths/login
+Content-Type: application/json
+
+{
+  "username":"manager",
+  "password":"manager"
+}
+```
+
+Les deux premiers cas devraient démontrer l'application - le user "inconnu" recoit une erreur 401, tandis que l'admin recoit bien en retour un json avec un token.
+
+L'avant dernière créer un nouvel utilisateur puis se logge avec.
+
+Notre volet "authentification" est fonctionnel - reste que tout le monde peut toujours tout faire !
+
+### Authorisation et rôles
+
+Pour faire la différence entre nos deux utilisateurs nous allons donner un rôle "admin" à l'administrateur. On va donc adapter nos utilisateurs en DB:
+
+```java
+    @Bean
+    public CommandLineRunner demo(UserService userService) {
+        return (args) -> {
+            System.out.println("Creating users");
+            userService.register("admin", "admin", "ADMIN");
+            userService.register("user", "user", "USER");
+        };
+    }
+```
+
+Pour que ceci fonctionne vous allez devoir adapter la signature de la méthode register... puis celle de createOne pour accepter un troisième paramètre. Veillez également à supprimer vos record en DB pour bien les recréer.
+
+Une fois ceci fait il est possible de lire ces rôles et de donner des droits en conséquences. La bonne place pour faire ce code est évidemment le filter:
+
+
+```java
+@Override
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+        String token = request.getHeader("Authorization");
+        if (token != null) {
+            String username = userService.verifyJwtToken(token);
+            if (username != null) {
+                User user = userService.readOneFromUsername(username);
+                if (user != null) {
+                    List<GrantedAuthority> authorities = new ArrayList<>();
+                    if (user.getRole().equals("ADMIN")) authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
+                    UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(user, null, authorities);
+                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                }
+            }
+        }
+        filterChain.doFilter(request, response);
+    }
+```
+
+On a donc le début du filtre comme précédemment, mais on ne se contente plus de vérifier que le token est correct - en fonction du rôle de l'utilisateur on va lui fournir des droits ("GrantedAuthority"). Il faut bien voir ici la découpe entre notre code et celui de Spring:
+
+- A nous de définir où un utilisateur est stocké (pour nous dans une table User d'une base de donnée Postgresql) et de quel type il s'agit (on regarde le champs rôle)
+- A Spring de gérer ces "authorities" quand l'utilisateur se connecte.
+
+En d'autre mot il y a une indirection entre à quoi servent les droits et d'où ils sont issus.
+
+Ceci ne devrait rien changer à l'exécution du ficher .http - mais on peut maintenant sécuriser nos différentes méthodes via de simples annotations:
+
+```java
+@RestController
+@RequestMapping("/pizzas")
+public class PizzaController {
+    ...
+    @PostMapping({"", "/"})
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    public Pizza addPizza(@RequestBody NewPizza newPizza) {
+```
+
+L'unique ajout et le "PreAuthorize" qui indique à Spring de vérifier que l'utilisateur courant a bien le rôle "ROLE_ADMIN" - sans quoi il ne peut pas effectuer l'opération.
+
+Ceci est de la sécurité *déclarative* - pas besoin de mettre des "if" partout dans le code, on peut garder cette gestion à un seul endroit (le controller - pourquoi là ?).
+
+### Test de sécurité
+
+Voici à nouveau un .http pour vérifier tout ceci:
+
+{% raw %}
+```bash
+######### NORMAL OPERATION  ###########
+
+### Read all pizzas
+GET http://localhost:3000/pizzas
+
+### Read all pizzas with File variable
+@baseUrl = http://localhost:8080
+
+GET {{baseUrl}}/pizzas
+
+### Create a pizza by using the admin account
+#### First login as the admin
+POST {{baseUrl}}/auths/login
+Content-Type: application/json
+
+{
+  "username":"admin",
+  "password":"admin"
+}
+
+> {% client.global.set("adminToken", response.body.token) %}
+
+#### Create a pizza with the admin token
+POST {{baseUrl}}/pizzas
+Content-Type: application/json
+Authorization: {{adminToken}}
+
+{
+  "title":"Magic Green",
+  "content":"Epinards, Brocolis, Olives vertes, Basilic"
+}
+
+######### ERROR OPERATION  ###########
+
+### 1. Create a pizza without a token
+POST {{baseUrl}}/pizzas
+Content-Type: application/json
+
+{
+  "title":"Magic Green",
+  "content":"Epinards, Brocolis, Olives vertes, Basilic"
+}
+
+### 2. Create a pizza without being the admin, use manager account
+#### 2.1 First login as the manager
+POST {{baseUrl}}/auths/login
+Content-Type: application/json
+
+{
+  "username":"manager",
+  "password":"manager"
+}
+
+> {% client.global.set("managerToken", response.body.token) %}
+
+#### 2.2 Try to create a pizza with the manager token
+POST {{baseUrl}}/pizzas
+Content-Type: application/json
+Authorization: {{managerToken}}
+
+{
+  "title":"Magic Green",
+  "content":"Epinards, Brocolis, Olives vertes, Basilic"
+}
+```
+{% endraw %}
+
+Soit:
+
+- Si on se log en temps qu'admin et que l'on fourni bien le token, créer une pizza fonctionne
+- Tous les autres cas (pas de token, token user) échouent.
+
 
 ## Sécurisation de properties
 
