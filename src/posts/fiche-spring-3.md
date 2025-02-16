@@ -66,7 +66,7 @@ Le tour du projet étant fait et fonctionnel, nous allons ajouter ces features d
 
 Nous allons ajouter des dépendances nécessaires:
 
-- Dans le pom.xml, !["edit starters"](image.png) et ajouter spring security (Edit Starter permet de compléter vos settings après la création du projet)
+- Dans le pom.xml, !["edit starters"](https://cae-exercices.e-vinci.be/images/starters.png) et ajouter spring security (Edit Starter permet de compléter vos settings après la création du projet)
 - Editer le pom.xml pour ajouter java-jwt et spring-dotenv - pour ce faire, utilisez "Generate... > Maven Dependency"
 
 Faite attention de prendre les packages exacts spécifiés (il y en a beaucoup, les confusions sont faciles !).
