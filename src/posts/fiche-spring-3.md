@@ -60,7 +60,7 @@ L'idée ici est d'éviter que les objet de type "Entity" ne soient utilisé en i
 
 ## Exercice
 
-Le tour du projet étant fait et fonctionnel, nous allons ajouter ces features de sécurité.
+Le tour du projet étant fait et fonctionnel (le serveur tourne et http://localhost:8080/pizzas renvoie une liste - potentiellement vide), nous allons ajouter ces features de sécurité.
 
 ### Nouvelles dépendances
 
@@ -73,14 +73,114 @@ Faite attention de prendre les packages exacts spécifiés (il y en a beaucoup, 
 
 Pourquoi ces packages:
 
-- Spring Security va nous permettre de facilement configurer les accès à nos différent endpoints
-- JWT (JSON Web Token) est une technologie pour générer des "token" après une authentification réussie. Les token servent d'alternatives aux cookies dès lors que l'on utilise un client type SPA (comme React) - des éléments sur ce sujet [ici](https://stackoverflow.com/questions/37582444/jwt-vs-cookies-for-token-based-authentication)
-- Spring Dotenv va nous aider à garder nos secrets (typiquement user/password utilisé pour la database) dans un format plus facile à manipuler que des variables d'environnement.
+- **Spring Security** va nous permettre de facilement configurer les accès à nos différent endpoints
+- **JWT (JSON Web Token)** est une technologie pour générer des "token" après une authentification réussie. Les token servent d'alternatives aux cookies dès lors que l'on utilise un client type SPA (comme React) - des éléments sur ce sujet [ici](https://stackoverflow.com/questions/37582444/jwt-vs-cookies-for-token-based-authentication)
+- **Spring Dotenv** va nous aider à garder nos secrets (typiquement user/password utilisé pour la database) dans un format plus facile à manipuler que des variables d'environnement.
 
-## Hachage des mots de passe
+Une fois ceci fait, relancez l'application et retournez sur http://localhost:8080/pizzas - que voit on?
 
-Utiliser bcrypt (inclus avec spring security) pour hacher le mdp dans le service avant de l'enregistrer dans la DB.
-Créer le fichier de configuration définissant le bean permettant d'avoir un BCryptPasswordEncoder.
+Bien que nous n'ayons fait aucune configuration, l'application n'est plus accessible sans login/password - ceci est du au fait que Spring Security fonctionne sur un principe de "deny all". En d'autres mots - si on ne spécifie rien, toutes les routes nécessitent que le user soit authentifié. Cette valeur par défaut nous embête un peu ici... mais elle a beaucoup de sens !
+
+Nous allons voir dans la suite comment mettre à jour cette configuration.
+
+### Hachage des mots de passe
+
+En première étape, on va encrypter les mots de passe avant de les sauvegarder dans la DB. L'idée est qu'on ne devrait jamais stocker de mots de passe "en clair" (ie sans êtres encryptés). N'oubliez pas que si quelqu'un met la main sur les mots de passes utilisateurs de votre application il peut non seulement l'utiliser en se faisant passer pour un de ces utilisateurs... mais également tenter sa chance avec ce même email et mot de passe dans d'autres applications (la plupart des gens utilisent les mêmes mots de passe).
+
+Il existe un grand nombre de manière d'encrypter un mot de passe - celle que l'on va utiliser (la plus courante, basée sur [bcrypt](https://en.wikipedia.org/wiki/Bcrypt)) est une opération à sens unique. En d'autre mot, si quelqu'un met la main sur le mot de passe encrypté *il lui est impossible de retrouver le mot de passe d'origine*.
+
+Mais alors, comment faire pour vérifier après ? La logique est en fait assez simple:
+
+- Le user créer son user et son mot de passe (en fournissant le mot de passe en clair)
+- On l'encrypte avec bcrypt et on sauve cette version dans la base de données
+- Quand le user revient et veut se connecter, il tape son mot de passe (à nouveau en clair)
+- On l'encrypte, et on *compare la version encryptée avec celle dans la base de données* 
+
+L'algorythme bcrypt a été implémenté dans un grand nombre de language dont en Java. La bibliotèque qui le contient est intégrée à Spring Security. On appelle cette opération d'encryption un "hashage".
+
+On peut faire une première version très simple en mettant à jour le UserService:
+
+```java
+    public void createOne(String username, String password) {
+        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+
+        User user = new User();
+        user.setUsername(username);
+
+        String hashedPassword = encoder.encode(password);
+        user.setPassword(hashedPassword);
+        user.setRole("USER");
+        userRepository.save(user);
+    }
+```
+
+La classe BCryptPasswordEncoder est présente dans le package de spring, et dispose d'une méthode "encode" que l'on utilise sur le password avant de sauvegarder.
+Pour tester ceci, le plus simple au stade actuel est d'utiliser un runner dans l'application (comme précédemment pour créer des données):
+
+```java
+    @Bean
+    public CommandLineRunner demo(UserService userService) {
+        return (args) -> {
+            System.out.println("Creating users");
+            userService.register("admin", "admin");
+            userService.register("user", "user");
+        };
+    }
+```
+
+Une fois l'application relancée, allez voir la DB via DataGrip - vous devriez voir deux record avec les passwords correctement encryptés:
+
+| id | password                                        | username | role |
+|----|------------------------------------------------|----------|------|
+| 2  | $2a$10$BGc4auhIrzMrEdsX3Xq25u9zhwY1Zl.emrSP2dTwUBYEyVOxGRBkC | admin    | USER |
+| 3  | $2a$10$.Dt44U9Le.w3QNTyAhTQ/ua2z7xCuqbDbu.b5A6Vgm8DFnnp1yYOW | user     | USER |
+
+
+Ceci dit, la manière dont on utilise le BCryptPasswordEncoder n'est pas très efficiente: on va recréer une instance à chaque usage. On peut adapter ceci pour utiliser le système d'injection de dépendance de Spring - on ne peut pas l'injecter directement (elle n'a pas d'annotation type @Service), nous allons donc procéder autrement.
+
+Créer un package "configuration" et dedans une classe BcryptConfiguration
+
+```java
+@Configuration
+public class BcryptConfiguration {
+
+    @Bean
+    public BCryptPasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+}
+```
+
+[@Configuration](https://docs.spring.io/spring-framework/reference/core/beans/java/configuration-annotation.html
+) indique a Spring que cette classe n'est pas elle même un Bean, mais que ses méthodes peuvent en créer - ici la méthode "passwordEncoder" retourne un Bean de type BCryptPasswordEncoder... qui est donc lui même injectable.
+
+On peut donc l'injecter dans notre UserService - et l'utiliser en lieu et place de celle créee sur le moment:
+
+```java
+public class UserService {
+
+    private final UserRepository userRepository;
+    private final BCryptPasswordEncoder passwordEncoder;
+
+    public UserService(UserRepository userRepository, BCryptPasswordEncoder passwordEncoder) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
+
+    ...
+
+      public void createOne(String username, String password) {
+        User user = new User();
+        user.setUsername(username);
+
+        String hashedPassword = passwordEncoder.encode(password);
+        user.setPassword(hashedPassword);
+        user.setRole("USER");
+        userRepository.save(user);
+    }
+}
+```
 
 ## Création de token JWT
 
