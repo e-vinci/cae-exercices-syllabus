@@ -6,7 +6,7 @@ date: '2025-01-30'
 tags: [fiche, spring]
 ---
 
-# Spring et JPA
+# Sécurisation et Documentation
 
 La semaine passée nous avons appris les concepts suivants:
 
