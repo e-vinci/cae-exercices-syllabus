@@ -10,7 +10,7 @@ tags: [fiche, spring]
 
 La semaine passée nous avons appris les concepts suivants:
 
-- Persistance des données
+- Persistence des données
 - Object-Relationnal Mapping
 
 Cette semaine nous allons ajouter les derniers éléments important pour tout backend : la gestion de la sécurité et de l'authentification.
@@ -27,17 +27,55 @@ Nous allons partir d'une API pour la gestion d'une pizzeria, dont les fonctionna
 - Commander une pizza
 - Inscrire des utilisateurs (un utilisateur a un pseudonyme, un mot de passe en clair pour le moment et un rôle utilisateur par défaut)
 
-L'objectif de ce tutoriel va être de protéger les actions qui doivent l'être. Seuls les utilisateurs connectés pourront commander une pizza, et seuls les administrateurs pourront créer, supprimer et éditer des pizzas.
+L'objectif de ce tutoriel va être de protéger les actions qui doivent l'être. 
+
+- Seuls les utilisateurs connectés pourront commander une pizza
+- Seuls les administrateurs pourront créer, supprimer et éditer des pizzas.
+
+On va donc couvrir ici deux notions différentes et liées:
+
+- On parle d'`Authentification` pour tout ce qui est "est ce que la personne est bien qui elle prétend être". La manière la plus classique de gérer de l'authentification est via un user (souvent un email) et un password.
+- On parle d'`Authorization` pour tout ce qui est "est ce que cette personne a le droit de faire ce qu'elle souhaite" - un user peut être correctement authentifié mais ne pas avoir les droits de faire une certaine opération (créer une nouvelle pizza dans notre exemple). La solution classique s'appelle des `Roles` ou [RBAC](https://en.wikipedia.org/wiki/Role-based_access_control) - un système par lequel chaque user se voit attribuer un ou plusieurs rôles qui lui donne des droits spécifique (user, administrateur ou par exemple pour un site de contenu: reader, editor, reviewer, ...)
+
+On voit directement qu'on ne peut pas `authoriser` quelqu'un avant de l'avoir `authentifié`.
 
 ## Project setup
 
-Nous allons cloner un repository contenant le code déjà existant pour le modifier dans cette troisième fiche.
+Nous allons cloner un repository contenant le code déjà existent pour le modifier dans cette troisième fiche.
 
-Cloner le repo
+Cloner le repository présent ici: [https://github.com/e-vinci/cae_exercices_fiche3](https://github.com/e-vinci/cae_exercices_fiche3).
+
+Lancez le projet (avec le docker pour Postgres ou non selon vos préférence) et vérifiez que tout est en ordre.
+Notez que le postgres fourni est fait pour tourner sur le port 5433 (et non sur le 5432 par défaut) dans le but de ne pas créer de conflit avec un Postgres installé sur votre machine.
+
+### DTOs
+
+Vous allez trouvez deux répertoire au niveau du package "models":
+- Un "entities" qui correspond aux objets liés à la DB (les "Entités") comme précédemment
+- Un nommé "DTOs" avec de "simples objets java" ("POJO" en anglais: "Plain Old Java Object")
+
+Ceci suit un pattern architectural appellé ["Data Transfer Object"](https://martinfowler.com/eaaCatalog/dataTransferObject.html) - le site référencé est celui de Martin Fowler, un programmeur et architecte assez connu et prolifique notemment dans sa documentation de "patterns" - des éléments de code que l'on retrouve dans beaucoup d'applications. 
+
+L'idée ici est d'éviter que les objet de type "Entity" ne soient utilisé en input du controller - il n'y a par exemple aucun sens que l'utilisateur fournissent l'id de l'objet, ou le password encrypté, bien que ces champs doivent exister (et être obligatoires) au niveau de l'entité User. On crée donc des objets distincts, très simples (des champs et des accesseurs) pour ce faire.
+
+## Exercice
+
+Le tour du projet étant fait et fonctionnel, nous allons ajouter ces features de sécurité.
+
+### Nouvelles dépendances
 
 Nous allons ajouter des dépendances nécessaires:
-- Dans le pom.xml, "edit starters" et ajouter spring security
-- Editer le pom.xml pour ajouter java-jwt et spring-dotenv
+
+- Dans le pom.xml, !["edit starters"](image.png) et ajouter spring security (Edit Starter permet de compléter vos settings après la création du projet)
+- Editer le pom.xml pour ajouter java-jwt et spring-dotenv - pour ce faire, utilisez "Generate... > Maven Dependency"
+
+Faite attention de prendre les packages exacts spécifiés (il y en a beaucoup, les confusions sont faciles !).
+
+Pourquoi ces packages:
+
+- Spring Security va nous permettre de facilement configurer les accès à nos différent endpoints
+- JWT (JSON Web Token) est une technologie pour générer des "token" après une authentification réussie. Les token servent d'alternatives aux cookies dès lors que l'on utilise un client type SPA (comme React) - des éléments sur ce sujet [ici](https://stackoverflow.com/questions/37582444/jwt-vs-cookies-for-token-based-authentication)
+- Spring Dotenv va nous aider à garder nos secrets (typiquement user/password utilisé pour la database) dans un format plus facile à manipuler que des variables d'environnement.
 
 ## Hachage des mots de passe
 
