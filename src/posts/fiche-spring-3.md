@@ -67,7 +67,7 @@ Le tour du projet étant fait et fonctionnel (le serveur tourne et http://localh
 Nous allons ajouter des dépendances nécessaires:
 
 - Dans le pom.xml, !["edit starters"](https://cae-exercices.e-vinci.be/images/starters.png) et ajouter spring security (Edit Starter permet de compléter vos settings après la création du projet)
-- Editer le pom.xml pour ajouter java-jwt et spring-dotenv - pour ce faire, utilisez "Generate... > Maven Dependency"
+- Editer le pom.xml pour ajouter java-jwt (celui de com.auth0) et spring-dotenv - pour ce faire, utilisez "Generate... > Maven Dependency"
 
 Faite attention de prendre les packages exacts spécifiés (il y en a beaucoup, les confusions sont faciles !).
 
@@ -184,9 +184,104 @@ public class UserService {
 
 ## Création de token JWT
 
-Ajouter une route login qui récupère les credentials. Le service vérifie que l'utilisateur existe et que son mot de passe est correct (avec bcrypt), puis génère un token jwt avec java-jwt. Inclure le pseudonyme dans le token, rappeler le fonctionnement de jwt. Le secret est hardcodé pour le moment.
+Nous avons maintenant des users avec des passwords correctement "hashés" dans notre base de donnée et un bean BCryptPasswordEncoder capable de vérifier si un password fourni (en clair) est identique à celui dans la DB (hashé).
 
-## Configuration de Spring Security
+Reste que dans notre architecture, il va nous falloir renvoyer autre chose qu'un cookie si le user fourni (correctement) son user et mot de passe - à savoir un "token" JWT.
+Le principe est que sur un login réussi, on va renvoyer le user et un token permettant de s'authentifier lors des requêtes suivantes (vous avez sans doute déjà fait cela côté client dans vos cours de React).
+
+Comme vu plus haut dans "DTO", on ne veut pas renvoyer l'objet user complet vers le client, mais juste le username et le token. On va donc créer un DTO dédié pour ceci:
+
+```java
+@Data
+@NoArgsConstructor
+public class AuthenticatedUser {
+    private String username;
+    private String token;
+}
+```
+
+Remarquer le nommage - il s'agit bien d'un utilisateur authentifié.
+
+Pour créer un token JWT il nous faut trois choses:
+
+- Un algorithme
+- Un secret
+- Une durée de vie
+
+Allons rajouter cela dans le UserService:
+
+```java
+public class UserService {
+    ...
+    private static final String jwtSecret = "ilovemypizza!";
+    private static final long lifetimeJwt = 24*60*60*1000; // 24 hours
+
+    private static final Algorithm algorithm = Algorithm.HMAC256(jwtSecret);
+```
+
+Notre secret n'est pas réellement très secret, nous changerons cela dans un moment. L'algorithme choisi est [HMAC](https://en.wikipedia.org/wiki/HMAC)-256 - le 256 indique la "force" de la fonction (et donc la difficulté de la casser).
+
+La durée parait raisonnable - c'est un équilibre entre sécurité et "convenience" - on ne veut pas demander au user de se reconnecter toutes les cinq minutes, mais sans doute plus d'une fois par an - en fonction de l'importance des données qui sont derrière.
+
+
+Ceci nous permet de créer le token correctement:
+
+```java
+    public AuthenticatedUser createJwtToken(String username) {
+        String token = JWT.create()
+                .withIssuer("auth0")
+                .withClaim("username", username)
+                .withIssuedAt(new Date())
+                .withExpiresAt(new Date(System.currentTimeMillis() + lifetimeJwt))
+                .sign(algorithm);
+
+        AuthenticatedUser authenticatedUser = new AuthenticatedUser();
+        authenticatedUser.setUsername(username);
+        authenticatedUser.setToken(token);
+
+        return authenticatedUser;
+    }
+```
+
+On voit ici que le token ne se base en rien sur le mot de passe - mais juste sur le username. On doit donc bien vérifier *avant* que le password est correct, puis seulement appeller la méthode pour créer le token.
+
+On a maintenant toutes les pièces pour pouvoir logger correctement un utilisateur, reste à les mettre ensemble dans une méthode login dans le UserService
+
+```java
+    public AuthenticatedUser login(String username, String password) {
+        User user = userRepository.findByUsername(username);
+        if (user == null) return null;
+        if (!passwordEncoder.matches(password, user.getPassword())) {
+            return null;
+        }
+        return createJwtToken(username);
+    }
+```
+
+Celle ci fait donc trois opérations:
+
+- Récupère un user dans la base de données basé sur le username
+- Vérifie (via le password encoder) si le mot de passe est correct
+- Si oui, créer le token et le renvoie
+
+Il nous faut encore pouvoir vérifier que le token est correct - ajoutons une méthode de plus au UserService:
+
+
+```java
+    public String verifyJwtToken(String token) {
+        try {
+            return JWT.require(algorithm).build().verify(token).getClaim("username").asString();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+```
+
+La méthode délègue cette opération au package JWT, sur base du token fourni, de la variable qui a permis de le créer et du secret (via l'algorithme).
+
+Reste à s'assurer que toutes les (autres) méthodes vérifient bien le token à chaque appel 
+
+### Configuration de Spring Security
 
 Créer le fichier filtre, qui vérifie le token jwt avec java-jwt. Le secret y est encore hardcodé.
 Créer le fichier de configuration de Spring Security, qui définit method security et l'utilisation du filtre.
