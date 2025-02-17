@@ -58,7 +58,7 @@ Ceci suit un pattern architectural appellé ["Data Transfer Object"](https://mar
 
 L'idée ici est d'éviter que les objet de type "Entity" ne soient utilisé en input du controller - il n'y a par exemple aucun sens que l'utilisateur fournissent l'id de l'objet, ou le password encrypté, bien que ces champs doivent exister (et être obligatoires) au niveau de l'entité User. On crée donc des objets distincts, très simples (des champs et des accesseurs) pour ce faire.
 
-## Exercice
+## Tutoriel
 
 Le tour du projet étant fait et fonctionnel (le serveur tourne et http://localhost:8080/pizzas renvoie une liste - potentiellement vide), nous allons ajouter ces features de sécurité.
 
@@ -66,7 +66,7 @@ Le tour du projet étant fait et fonctionnel (le serveur tourne et http://localh
 
 Nous allons ajouter des dépendances nécessaires:
 
-- Dans le pom.xml, !["edit starters"](https://cae-exercices.e-vinci.be/images/starters.png) et ajouter spring security (Edit Starter permet de compléter vos settings après la création du projet)
+- Dans le pom.xml, faire "Edit Starters" (il faut avoir le pom.xml ouvert, l'option est proposée dans l'éditeur même) et ajouter spring security (Edit Starter permet de compléter vos settings après la création du projet)
 - Editer le pom.xml pour ajouter java-jwt (celui de com.auth0) et spring-dotenv - pour ce faire, utilisez "Generate... > Maven Dependency"
 
 Faite attention de prendre les packages exacts spécifiés (il y en a beaucoup, les confusions sont faciles !).
