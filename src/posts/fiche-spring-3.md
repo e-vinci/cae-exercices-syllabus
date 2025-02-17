@@ -561,16 +561,87 @@ Utiliser la config pour le secret au lieu de la valeur hardcodée.
 
 # Documentation
 
+Nous avons codé un backend et configuré de multiples endpoint - il est maintenant possible de développer un front end pour y ajouter une interface (par exemple avec React).
+
+Le problème côté front end va être de savoir:
+
+- Quels sont les endpoints disponibles ?
+- Quel(s) paramètres acceptent il ?
+
+En un mot - de la documentation.
+
+Ceci pourrait être fait manuellement (par exemple dans un fichier markdown) mais cette approche a de nombreux problèmes:
+
+- Manque de standardisation
+- Difficile de maintenir la documentation à jour avec le code
+
+Pour résoudre ces problèmes l'industrie a développé des *standards* (comme OpenAPI) et des *outils* (comme Swagger).
+
 ## Documentation OpenAPI
 
-Description de ce qu'est OpenAPI et Swagger.
-Différences de format. Nous utilisons OpenAPI 3.X en YAML.
+[OpenAPI](https://www.openapis.org/what-is-openapi) est une *spécification* indépendante de tout language de programmation ou outils pour définir une API
 
-## Création et visualisation
+[Swagger](https://swagger.io/tools/open-source/) est un *outil* pour nous aider à produire de la documentation sur nos APIs.
 
-Editeur en ligne, linter et prévisualisation.
-Création dans IntelliJ ("New" -> "Documentation"), onglet de prévisualisation.
+Le format sous jacent est souvent soit du JSON soit du YAML - les spécifications évoluant, il y a également des versions (v3 actuellement).
 
+## Ajouter de la documentation à notre API
+
+Nous pourrions créer un document yaml à la main - mais l'écosystème Spring propose quelque chose pour gagner du temps - un package qui va générer cette documentation basé sur nos controllers.
+
+Pour ceci, ajouter une dépendance maven:
+
+```xml
+<dependency>
+  <groupId>org.springdoc</groupId>
+  <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+  <version>2.3.0</version>
+</dependency>
+```
+
+Rédémarrez votre serveur et allez sur l'url suivante: http://localhost:8080/swagger-ui/index.html
+
+Vous devriez voir la liste complète des endpoints... et plus:
+
+- La liste est groupée par controller
+- Chaque endpoint indique son url, mais aussi la méthode HTTP
+- Il est possible d'appeller directement un endpoint - Swagger nous indique les paramètres à fournir
+
+Pour aller à la source, allez sur: http://localhost:8080/v3/api-docs (json) ou http://localhost:8080/v3/api-docs.yaml (yaml) pour sortir les documents OpenAPI.
+
+Comment ceci peut il fonctionner ? Notre code contient en fait toutes les informations nécessaires:
+
+Les classes controller ont une annotation @RestController et @RequestMapping qui indiquent les urls:
+
+```java
+@RestController
+@RequestMapping("/pizzas")
+public class PizzaController {
+  ...
+```
+
+Les endpoints eux mêmes sont également annotés:
+
+```java
+    @GetMapping("/{id}")
+    public Pizza getPizza(@PathVariable long id) {
+```
+
+Le package de Spring Doc récupère ces informations et les converti dans le format OpenAPI - Swagger peut alors générer le UI que nous venons de voir.
+
+### Ajouter de l'information
+
+Bien que l'UI générée soit déjà bien complète, il est possible (et souhaitable) d'ajouter des descriptions aux différents endpoint - ceci se fait via - surprise - des annotations:
+
+```java
+    @Operation(summary = "Get a pzza by its id")
+    @GetMapping("/{id}")
+    public Pizza getPizza(@PathVariable long id) {
+```
+
+Redémarrez votre serveur et retournez sur Swagger - la description est maintenant visible dans la documentation.
+
+<!-- 
 ## Syntaxe
 
 - Infos générales
@@ -761,4 +832,4 @@ Une documentation ne peut être utile que si elle est parfaitement correcte et r
 ## Code -> Documentation
 
 Créez la documentation de l'API disponible à l'adresse [github.com/e-vinci/cae-exercices-exemple](https://github.com/e-vinci/cae-exercices-exemple). N'hésitez pas à récupérer cette API sur votre machine et à la tester pour vous assurer de bien comprendre son fonctionnement.
-
+ -->
