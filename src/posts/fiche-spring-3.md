@@ -633,7 +633,7 @@ Redémarrez votre serveur et retournez sur Swagger - la description est maintena
 
 Il est parfois utile d'écrire la documentation manuellement au lieu de la générer, par exemple lorsque l'application n'a pas encore été développée ou pour exprimer des besoins.
 
-Swagger propose un éditeur en ligne pour écrire et valider la syntaxe de sa documentation, à l'adresse [editor.swagger.io](https://editor.swagger.io). Il est également possible d'écrire un fichier de documentation OpenAPI directement dans IntelliJ. Créez un fichier `documentation.yaml` à la racine du projet, en sélectionnant "New" > "OpenAPI Specification" et sélectionnez ensuite le format "OpenAPI 3 (.yaml) au moment de choisir le nom du fichier.
+Swagger propose un éditeur en ligne pour écrire et valider la syntaxe de sa documentation, à l'adresse [editor.swagger.io](https://editor.swagger.io). Il est également possible d'écrire un fichier de documentation OpenAPI directement dans IntelliJ, en sélectionnant "New" > "OpenAPI Specification".
 
 Analysez ensuite le contenu du fichier `documentation.yaml`. Essayez de comprendre la syntaxe d'OpenAPI. Les spécifications complètes de cette syntaxe sont disponibles [sur le site de swagger](https://swagger.io/specification/). Ajoutez les spécifications nécessaires pour la route `login` que vous avez créé, ainsi que les authentifications et autorisations nécessaires.
 
