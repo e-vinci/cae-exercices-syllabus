@@ -543,10 +543,140 @@ Soit:
 
 ## Sécurisation de properties
 
-Créer un fichier .env définissant des variables d'environnement.
-Modifier le fichier application.properties pour utiliser ces variables d'environnement.
-Créer classe de configuration pour récupérer la propriété du secret.
-Utiliser la config pour le secret au lieu de la valeur hardcodée.
+Nous parlons de sécurité... mais on vient en réalité d'introduire un gros problème à ce niveau - nos informations "sensibles" sont simplement commitées dans le repository lui même:
+
+- JWT secret
+- User & Password pour la base de données.
+
+Ces informations ne devraient *jamais* être commitée. Pourquoi ? Parce que cela veut dire que chaque développeur a accès au password de la base de données - et donc la capcité de la supprimer, ou de faire un TRUNCATE, etc.
+
+Nous devons donc trouver un moyen de retirer ces informations du code (.java ou application.properties) pour les mettre... "ailleurs".
+
+Ce "ailleurs" est dans la plupart des cas un éléments au niveau de l'OS - les variables d'environnement.
+
+### Variable d'environnement
+
+Cette notion existe dans chaque OS. En Windows, vous pouvez y accéder via le menu démarrer ("Edit system environment variables"). Ouvrir l'option est intéressant pour voir ce qui s'y trouve déjà. C'est variable selon le système, mais probablement un PATH et un ensemble de variable pour indiquer à windows où trouver certains folder (JAVA_HOME par exemple).
+
+Il est possible de définir ou de lire ces variables depuis le terminal.
+
+En power shell:
+
+```powershell
+echo $Env:PATH
+$Env:TEXT="Mon texte"
+echo $Env:TEXT
+```
+
+ou en linux
+
+```bash
+echo %PATH%
+export TEXT="Mon texte"
+echo %TEXT%
+```
+
+On peut donc créer une variable d'environnement avec notre password:
+
+```powershell
+$Env:DB_PASSWORD=cae
+```
+
+et le remplacer dans application.properties:
+
+```properties
+spring.application.name=cae_exercices_fiche3
+
+spring.datasource.url=jdbc:postgresql://localhost:5432/cae_db
+spring.datasource.username=cae_user
+spring.datasource.password=${DB_PASSWORD}
+spring.jpa.generate-ddl=true
+```
+
+relancez l'application qui devrait fonctionner... mais probablement pas.
+
+Pourquoi ? Les variables d'environnments sont liés à un shell précis - et IntelliJ ne lance pas l'application dans le même.
+
+Pour s'en assurer néanmoins, nous pouvons ouvrir le terminal intégré à IntelliJ et:
+
+```powershell
+$Env:DB_PASSWORD=cae
+.\mvnw spring-boot:run  
+```
+
+La première ligne initialize la variable d'environnement, la seconde lance notre application avec la commande maven.
+
+Les choses devraient maintenant fonctionner - mais ce n'est pas forcément pratique.
+
+Pour configurer ces options directement, vous pouvez éditer votre configuration de lancement "Edit configurations" et ajouter une "configuration property" - ceci va assurer que les variables soient bien configurées avant le lancement.
+
+Notre application ne partage donc plus ses secrets - mais leur gestion n'est pas vraiment pratique, d'autant que dans un cas réel nous pourrions avoir une douzaine de variables à configurer:
+
+```bash
+# Info DB
+DB_NAME=postgres
+DB_USER=postgres
+DB_HOST=db.mars-central-1.rds.amazonaws.com
+DB_PASSWORD=dohiputmypasswordinthecourse
+
+# Email server
+INVITE_MAIL_SENDER=support@null.org
+FRONTEND_BASE_URL=https://localhost:5173
+
+# Token for an external API (ex: to generate PDF)
+PDF_MONKEY_TOKEN=generatingpdfishellbutfrozen
+
+# Token for another external API (ex: openai)
+OPENAI_API_KEY=thisisnotarealkey
+
+# Token for file storage (ex: AWS)
+AWS_ACCESS_KEY_ID=awsisanofferyoucantunderstand
+AWS_SECRET_ACCESS_KEY=butwhenitworkitworkswell
+
+AWS_STORAGE_BUCKET_NAME=bucketbrigade
+AWS_S3_REGION_NAME=mars-central-1
+...
+```
+
+### .env et spring-dotenv
+
+La manière "classique" de gérer ces variables est de créer un petit fichier .env où on va les écrire. L'éléments très important est que ce fichier .env **ne peut en aucun cas être committé**.
+
+Le fichier doit être créer dans src/main/resources (à côté du fichier properties)
+
+Nous allons donc directement l'ajouter au .gitignore:
+
+```bash
+...
+# .gitignore
+.env
+```
+
+Il est très important de faire ceci directement. Retirer des informations de l'historique de git est réellement complexe.
+
+On peut alors ajouter nos secret à ce fichier (qui ne quittera donc pas notre machine)
+
+```bash
+DB_PASSWORD="cae"
+```
+
+Reste à dire à Spring d'aller lire les informations à cet endroit - on va utiliser spring-dotenv (que vous avez installé précédemment) pour cela.
+
+Il suffit de rajouter une paire de lignes dans l'application elle même:
+
+```java
+public class CaeExercicesFiche3Application {
+
+    public static void main(String[] args) {
+        AnnotationConfigApplicationContext applicationContext = new AnnotationConfigApplicationContext();
+
+        // Add DotenvPropertySource to environment before registering components
+        DotenvPropertySource.addToEnvironment(applicationContext.getEnvironment());
+        SpringApplication.run(CaeExercicesFiche3Application.class, args);
+    }
+```
+
+Ceci dit à spring-dotenv de charger la configuration (sans paramètres, il va aller cherdcher un .env exactement là où nous l'avons placé) et de stockers ces valeurs qui sont alors disponible pour l'application.
 
 # Documentation
 
