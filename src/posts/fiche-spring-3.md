@@ -6,7 +6,7 @@ date: '2025-01-30'
 tags: [fiche, spring]
 ---
 
-# Sécurisation et Documentation
+# Sécurisation
 
 La semaine passée nous avons appris les concepts suivants:
 
@@ -411,20 +411,7 @@ Notre volet "authentification" est fonctionnel - reste que tout le monde peut to
 
 ### Authorisation et rôles
 
-Pour faire la différence entre nos deux utilisateurs nous allons donner un rôle "admin" à l'administrateur. On va donc adapter nos utilisateurs en DB:
-
-```java
-    @Bean
-    public CommandLineRunner demo(UserService userService) {
-        return (args) -> {
-            System.out.println("Creating users");
-            userService.register("admin", "admin", "ADMIN");
-            userService.register("user", "user", "USER");
-        };
-    }
-```
-
-Pour que ceci fonctionne vous allez devoir adapter la signature de la méthode register... puis celle de createOne pour accepter un troisième paramètre. Veillez également à supprimer vos record en DB pour bien les recréer.
+Pour faire la différence entre nos deux utilisateurs nous allons donner un rôle à l'administrateur. Utilisez DataGrip ou IntelliJ pour modifier l'utilisateur `admin` directement dans la base de données, pour lui donner le rôle `ADMIN`.
 
 Une fois ceci fait il est possible de lire ces rôles et de donner des droits en conséquences. La bonne place pour faire ce code est évidemment le filter:
 
@@ -579,13 +566,13 @@ Pour résoudre ces problèmes l'industrie a développé des *standards* (comme O
 
 ## Documentation OpenAPI
 
-[OpenAPI](https://www.openapis.org/what-is-openapi) est une *spécification* indépendante de tout language de programmation ou outils pour définir une API
+[OpenAPI](https://www.openapis.org/what-is-openapi) est une *spécification* indépendante de tout language de programmation ou outils pour définir une API.
 
 [Swagger](https://swagger.io/tools/open-source/) est un *outil* pour nous aider à produire de la documentation sur nos APIs.
 
 Le format sous jacent est souvent soit du JSON soit du YAML - les spécifications évoluant, il y a également des versions (v3 actuellement).
 
-## Ajouter de la documentation à notre API
+## Générer de la documentation
 
 Nous pourrions créer un document yaml à la main - mais l'écosystème Spring propose quelque chose pour gagner du temps - un package qui va générer cette documentation basé sur nos controllers.
 
@@ -641,20 +628,14 @@ Bien que l'UI générée soit déjà bien complète, il est possible (et souhait
 
 Redémarrez votre serveur et retournez sur Swagger - la description est maintenant visible dans la documentation.
 
-<!-- 
-## Syntaxe
 
-- Infos générales
-- Schémas
-- Chemins
-- Routes
-- Paramètres
-- Sécurité
+## Écrire la documentation
 
-## Génération
+Il est parfois utile d'écrire la documentation manuellement au lieu de la générer, par exemple lorsque l'application n'a pas encore été développée ou pour exprimer des besoins.
 
-Génération de documentation pdf.
-Génération de code starter.
+Swagger propose un éditeur en ligne pour écrire et valider la syntaxe de sa documentation, à l'adresse [editor.swagger.io](https://editor.swagger.io). Il est également possible d'écrire un fichier de documentation OpenAPI directement dans IntelliJ. Créez un fichier `documentation.yaml` à la racine du projet, en sélectionnant "New" > "OpenAPI Specification" et sélectionnez ensuite le format "OpenAPI 3 (.yaml) au moment de choisir le nom du fichier.
+
+Analysez ensuite le contenu du fichier `documentation.yaml`. Essayez de comprendre la syntaxe d'OpenAPI. Les spécifications complètes de cette syntaxe sont disponibles [sur le site de swagger](https://swagger.io/specification/). Ajoutez les spécifications nécessaires pour la route `login` que vous avez créé, ainsi que les authentifications et autorisations nécessaires.
 
 # Exercices récapitulatifs
 
@@ -832,4 +813,3 @@ Une documentation ne peut être utile que si elle est parfaitement correcte et r
 ## Code -> Documentation
 
 Créez la documentation de l'API disponible à l'adresse [github.com/e-vinci/cae-exercices-exemple](https://github.com/e-vinci/cae-exercices-exemple). N'hésitez pas à récupérer cette API sur votre machine et à la tester pour vous assurer de bien comprendre son fonctionnement.
- -->
