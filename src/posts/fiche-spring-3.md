@@ -362,6 +362,7 @@ La classe récupère notre filtre (via injection), et configure toute requête H
 
 Il est plus que temps de tester tout ceci - un petit fichier .http devrait faire l'affaire:
 
+{% raw %}
 ```bash
 @baseUrl = http://localhost:8080
 
@@ -402,6 +403,7 @@ Content-Type: application/json
   "password":"manager"
 }
 ```
+{% endraw %}
 
 Les deux premiers cas devraient démontrer l'application - le user "inconnu" recoit une erreur 401, tandis que l'admin recoit bien en retour un json avec un token.
 
