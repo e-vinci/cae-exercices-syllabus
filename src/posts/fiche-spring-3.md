@@ -636,6 +636,8 @@ Les choses devraient maintenant fonctionner - mais ce n'est pas forcément prati
 
 Pour configurer ces options directement, vous pouvez éditer votre configuration de lancement "Edit configurations" et ajouter une "configuration property" - ceci va assurer que les variables soient bien configurées avant le lancement.
 
+![configuration properties](configuration.png)
+
 Notre application ne partage donc plus ses secrets - mais leur gestion n'est pas vraiment pratique, d'autant que dans un cas réel nous pourrions avoir une douzaine de variables à configurer:
 
 ```bash
