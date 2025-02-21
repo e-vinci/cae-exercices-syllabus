@@ -67,7 +67,7 @@ Le tour du projet étant fait et fonctionnel (le serveur tourne et http://localh
 Nous allons ajouter des dépendances nécessaires:
 
 - Dans le pom.xml, faire "Edit Starters" (il faut avoir le pom.xml ouvert, l'option est proposée dans l'éditeur même) et ajouter spring security (Edit Starter permet de compléter vos settings après la création du projet)
-- Editer le pom.xml pour ajouter java-jwt (celui de com.auth0) et spring-dotenv - pour ce faire, utilisez "Generate... > Maven Dependency"
+- Editer le pom.xml pour ajouter java-jwt (celui de com.auth0) et spring-dotenv - pour ce faire, utilisez "Generate... > Dependency"
 
 ![alt text](edit-starteds.png)
 
