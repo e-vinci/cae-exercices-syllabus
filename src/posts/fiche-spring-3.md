@@ -441,6 +441,8 @@ Une fois ceci fait il est possible de lire ces rôles et de donner des droits en
     }
 ```
 
+> Nous avons besoin de pouvoir récupérerr un utilisateur à partir de son username (méthode "readOneFromUsername") - celle ci n'existe pas encore sur le service, à vous de la créer (on va éviter d'aller directement dans le repository à partir du filtre).
+
 On a donc le début du filtre comme précédemment, mais on ne se contente plus de vérifier que le token est correct - en fonction du rôle de l'utilisateur on va lui fournir des droits ("GrantedAuthority"). Il faut bien voir ici la découpe entre notre code et celui de Spring:
 
 - A nous de définir où un utilisateur est stocké (pour nous dans une table User d'une base de donnée Postgresql) et de quel type il s'agit (on regarde le champs rôle)
