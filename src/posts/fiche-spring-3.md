@@ -268,6 +268,28 @@ Celle ci fait donc trois opérations:
 - Vérifie (via le password encoder) si le mot de passe est correct
 - Si oui, créer le token et le renvoie
 
+On appelle pas directement un service, donc il faut également avoir la méthode dans le controller:
+
+```java
+    @PostMapping("/login")
+    public AuthenticatedUser login(@RequestBody Credentials credentials) {
+        System.out.println("Loggin in controller");
+        System.out.println(credentials);
+        if (credentials == null ||
+                credentials.getUsername() == null ||
+                credentials.getUsername().isBlank() ||
+                credentials.getPassword() == null ||
+                credentials.getPassword().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+        }
+
+        AuthenticatedUser user = userService.login(credentials.getUsername(), credentials.getPassword());
+        if (user == null) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+
+        return user;
+    }
+```
+
 Il nous faut encore pouvoir vérifier que le token est correct - ajoutons une méthode de plus au UserService:
 
 
