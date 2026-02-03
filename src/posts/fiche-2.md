@@ -2,8 +2,8 @@
 title: Fiche 2
 description: Spring et basés de données.
 permalink: posts/{{ title | slug }}/index.html
-date: '2025-01-18'
-tags: [fiche, spring]
+date: '2026-02-12'
+tags: [fiche, spring, orm]
 ---
 
 # Spring et JPA

@@ -2,8 +2,8 @@
 title: Fiche 3
 description: Spring et sécurité.
 permalink: posts/{{ title | slug }}/index.html
-date: '2025-01-30'
-tags: [fiche, spring]
+date: '2026-02-13'
+tags: [fiche, spring, security]
 ---
 
 # Sécurisation

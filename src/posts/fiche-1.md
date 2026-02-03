@@ -2,8 +2,8 @@
 title: Fiche 1
 description: Introduction a spring.
 permalink: posts/{{ title | slug }}/index.html
-date: '2025-01-11'
-tags: [fiche, spring]
+date: '2026-02-06'
+tags: [fiche, spring, intro]
 ---
 
 # Introduction a Spring

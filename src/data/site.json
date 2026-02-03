@@ -1,6 +1,6 @@
 {
-  "name": "Vinci Spring 2025",
-  "description": "Site pour la matériel de cours Introduction à Spring à la HE Vinci",
+  "name": "BINV2090-C - CAE : exercices",
+  "description": "Site pour la matériel de cours CAE : exercices à la HE Vinci",
   "url": "https://cae-exercices.e-vinci.be/",
   "author": {
     "name": "Martin Van Aken",
@@ -9,9 +9,14 @@
   "defaultSocialImage": "/images/default-social-image.png",
   "headerLinks": [
     {
-      "text": "Fiches",
-      "url": "/blog",
+      "text": "Home",
+      "url": "/",
       "external": false
+    },
+    {
+      "text": "Théorie",
+      "url": "https://e-vinci.github.io/cae-theory/",
+      "external": true
     },
     {
       "text": "GitHub",
@@ -21,18 +26,23 @@
   ],
   "socialLinks": [
     {
-      "text": "Site de l'école",
-      "url": "https://vinci.be/",
+      "text": "Théorie",
+      "url": "https://e-vinci.github.io/cae-theory/",
       "external": true
     },
     {
       "text": "Moodle",
-      "url": "https://moodle.vinci.be/",
+      "url": "https://moodle.vinci.be/course/view.php?id=482",
       "external": true
     },
     {
       "text": "Documentation Spring",
       "url": "https://docs.spring.io",
+      "external": true
+    },
+    {
+      "text": "GitHub",
+      "url": "https://github.com/e-vinci/cae-exercices-syllabus",
       "external": true
     }
   ],
