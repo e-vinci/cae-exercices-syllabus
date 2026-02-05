@@ -173,7 +173,6 @@ Nous allons créer un nouveau projet pour cette seconde fiche.
 
 Dans le second écran, sélectionnez:
 
-- Lombok
 - Spring Web
 - Spring Data JPA
 - Postgres Driver
@@ -242,7 +241,7 @@ public class Drink {
 }
 ```
 
-A vous de voir si vous générez les getter/setter ou si vous passez par Lombok, ca ne fait pas de différence (pas de `record` par contre, cela ne va pas fonctionner pour la suite).
+Générez les getter/setter avec l'IDE. N'utilisez pas de `record` par contre, cela ne va pas fonctionner pour la suite.
 
 ### Service
 

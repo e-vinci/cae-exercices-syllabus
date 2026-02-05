@@ -10,9 +10,9 @@ tags: [fiche, spring, intro]
 
 ## Objectif et organisation du cours
 
-Ceci est un cours d'introduction à [Spring](https://spring.io/) - un framework web (backend) écrit en Java. Les exercices présents dans les trois fiches de ce cours vont vous servir à apprendre à utiliser le framework pour le projet qui va suivre.
+Ceci est un cours d'introduction à [Spring](https://spring.io/) - un framework web (backend) écrit en Java. Les exercices présents dans les trois premières fiches de ce cours vont vous servir à apprendre à utiliser le framework pour le projet qui va suivre.
 
-Il ne dure que trois semaines (trois fois quatre heure d'atelier), en mode "travaux dirigés" - chaque semaine a un sujet précis et une fiche d'exercices à suivre.
+Il ne dure que trois semaines sur 5 séances, en mode "travaux dirigés" - chaque séance a un sujet précis et une fiche d'exercices à suivre.
 
 L'équipe enseigante est présente pour répondre à vos questions ou vous aider en cas de problème.
 
@@ -22,7 +22,7 @@ Le cours en lui même ne donne pas lieu à une évaluation.
 
 ### Un framework ?
 
-On distingue généralement les "bibliothèques" (librairies ou packages en anglais) des "frameworks". Ceux qui offrent un cadre de développement complet dans lequel notre code application va s'inscrire.
+On distingue généralement les "bibliothèques" (librairies ou packages en anglais) des "frameworks". Ceux qui offrent un cadre de développement complet dans lequel notre code va s'inscrire.
 
 En d'autres mots, on dit souvent qu'on appelle une bibliothèque, mais que dans le cas du framework c'est celui ci qui appelle notre code.
 
@@ -72,7 +72,6 @@ Initializr est inclus dans IntelliJ nous pouvons donc l'utiliser directement san
 
 Dans le second écran, sélectionnez:
 
-- Lombok
 - Spring Web
 
 Appuyez sur créer.
@@ -83,7 +82,6 @@ Appuyez sur créer.
 - Maven: Maven est un outil de build - une série de commande et un fichier de configuration (pom.xml) qui permet notamment de:
 - Lister les dépendances (le code externe dans votre application a besoin pour tourner)
 - Gérer des actions ("target") comme compiler, exécuter, lancer les tests sur votre projets ou même le déployer sans avoir à lancer de longues commandes
-- Lombok: Le [Project Lombok](https://projectlombok.org/features/) est un package open source qui fourni un ensemble d'annotations permettant de gagner du temps - par exemple de ne pas avoir à écrire des Getter/Setter ou des fonctions comme [equals ou hashcode](https://projectlombok.org/features/EqualsAndHashCode) à la main
 - Packaging: Une application java va contenir de nombreux fichiers - ceux qui sont réuni dans un fichier .war ou .jar - une sorte de zip avec des méta données spécifiques (vous pouvez d'ailleurs extraire le contenu d'un .jar avec WinZip ou autres - n'hésitez pas à essayer).
 
 ### Petit tour du projet
@@ -399,8 +397,8 @@ Pour gérer ceci nous allons créer un objet qui représente une citation dans u
 
 ```java
 public class Quote {
-    String quote;
-    String author;
+    private String quote;
+    private String author;
 
     public Quote() {}
 
@@ -424,32 +422,29 @@ public class Quote {
     public void setAuthor(String author) {
         this.author = author;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Quote quote1 = (Quote) o;
+        return Objects.equals(quote, quote1.quote) && Objects.equals(author, quote1.author);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(quote, author);
+    }
 }
 ```
 
-### Lombok
+Ce code peut sembler verbeux, mais IntelliJ peut générer la majorité automatiquement. Pour cela:
 
-> Attention chez beaucoup d'étudiant Lombok ne fonctionne pas (bien) - ou pas du tout. Si c'est le cas pour vous gardez simplement la version précédente.
+1. Créez la classe avec ses attributs (`quote` et `author`)
+2. Faites un clic droit > **Generate** (ou `Alt+Insert`)
+3. Sélectionnez successivement: **Constructor**, **Getter and Setter**, **equals() and hashCode()**
 
-Le code en question est simple mais verbeux - nous pouvons le rendre beaucoup plus court grâce aux annotation de Lombok - le code suivant est équivalent à celui plus haut:
-
-```java
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
-public class Quote {
-    String quote;
-    String author;
-}
-```
-
-Les trois annotations ont chacune un rôle:
-
-- @Data génère des getters, setters hashCode & equals
-- @AllArgsConstructor génère un constructeur avec tous les attributes de classe
-- @NoArgsConstructor génère un constructeur vide (souvent nécessaire pour la sérialisation)
-
-Le code est plus court et surtout plus facile à maintenir - rien n'empêche de créer des setter/getter custom plus tard si le besoin s'en fait sentir.
+L'IDE génère tout le code nécessaire en quelques clics - il est donc inutile de l'écrire à la main.
 
 ### Services et injection de dépendances
 
@@ -508,8 +503,6 @@ Durant cette première séance, on a déjà vu pas mal d'avantage du framework:
 - Injection de dépendance: On peut créer un ensemble de controllers, services ou autres (on va voir un exemple supplémentaire avec des repository la semaine prochaine) et laisser Spring s'occuper des dépendance.
 - Serialisation: On travaille avec des objets java standard (Quote) et les framework les convertis en JSON quand nécessaire.
 - On peut "mapper" des méthodes avec des urls et récupérer facilement les paramètres pour s'en servir dans le code.
-
-Au passage on a vu avec Lombok comment écrire des modèles en quelques lignes.
 
 ## Exercice complémentaire
 
