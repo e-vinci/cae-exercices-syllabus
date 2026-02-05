@@ -10,7 +10,7 @@ tags: [fiche, spring, orm]
 
 ## Introduction
 
-La semaine passée nous avons crée notre première application Spring, et appris différents concepts:
+La semaine passée nous avons créé notre première application Spring, et appris différents concepts:
 
 - Injection de dépendance
 - Architecture en couche (Controller, Service)
@@ -80,7 +80,7 @@ Bien que loin d'être évident à coder, ce n'est en rien de la magie - JPA "tra
 
 - Classes vers Tables
 - Objets vers Lignes
-- Attribute vers Colonnes
+- Attributs vers Colonnes
 
 De même, la structure de la classe permet à JPA d'instancier les objets au retour d'un appel à findAll (par exemple).
 
@@ -202,7 +202,7 @@ spring.jpa.hibernate.ddl-auto=create-drop
 spring.jpa.generate-ddl=true
 ```
 
-Attention, si vous avez utilisez des valeurs différentes pour le nom ou user de la base de données, il faut adapter en conséquence !
+Attention, si vous avez utilisé des valeurs différentes pour le nom ou user de la base de données, il faut adapter en conséquence !
 
 JPA permettant de se connecter à quasiment n'importe quelle base de données nous devons spécifier un ensemble d'éléments.
 
@@ -359,7 +359,7 @@ Temps de tester ceci via un nouveau concept au niveau de notre application.
 
 ### CommandLineRunner 
 
-On va ouvir l'application que Spring nous a créer (Fiche2JpaApplication chez moi) et rajouter dans une méthode dans la classe:
+On va ouvir l'application que Spring nous a créé (Fiche2JpaApplication chez moi) et rajouter une méthode dans la classe:
 
 ```java
 ...
@@ -444,7 +444,7 @@ Mais comment ces insertions ont elles été effectuées ? Il faut retourner dans
 
 Donc nous avons défini un modèle avec l'annotation @Entity et le nom de la table. Ces informations, et les attributes de la classe Drink permettent à JPA de générer un DDL comme vu plus haut.
 
-Grâve au dialecte, il sera généré dans le DDL de la base de données choisie (SQL n'est pas complètemeent standard, donc c'est important !).
+Grâce au dialecte, il sera généré dans le DDL de la base de données choisie (SQL n'est pas complètement standard, donc c'est important !).
 
 La seconde partie (les insertions) vient du Repository donc cette simple ligne:
 
@@ -454,7 +454,7 @@ public interface DrinksRepository extends CrudRepository<Drink, Long> {
 }
 ```
 
-Le [CrudRepository](https://docs.spring.io/spring-data/commons/docs/current/api/org/springframework/data/repository/CrudRepository.html) fourni par défaut les méthodes standard sont on a besoin pour un modèle:
+Le [CrudRepository](https://docs.spring.io/spring-data/commons/docs/current/api/org/springframework/data/repository/CrudRepository.html) fournit par défaut les méthodes standards dont on a besoin pour un modèle:
 
 - findAll() => SELECT * FROM DRINKS
 - findById(id) => SELECT * FROM DRINKS WHERE ID = id
@@ -685,7 +685,7 @@ Cette logique d'écrire le test en premier porte un nom - [TDD - "Test Driven De
 
 JPA nous permet de mapper facilement une table vers une classe et des lignes vers des objets (dans les deux sens) - maintenant le sens même du modèle **relationnel** ce sont... des relations.
 
-Nous allons voir comment JPA peut gérer des relations entre différents objets (et donc entre des ligne sde tables différentes).
+Nous allons voir comment JPA peut gérer des relations entre différents objets (et donc entre des lignes de tables différentes).
 
 Pour ceci, il nous faut un seconde classe - nos boissons ne sont pas disponible partout, elles sont vendues par des FoodTrucks, chacun actif dans un quartier spécifique.
 
@@ -693,7 +693,7 @@ Pour ceci, il nous faut un seconde classe - nos boissons ne sont pas disponible 
 
 Avant de parler des relations entre Drinks & FoodTrucks, il nous faut créer:
 
-- Un modèle FoodTruck avec un nom et une adresse (n'oubliez pas les éléments JPA - @Entity at un id)
+- Un modèle FoodTruck avec un nom et une adresse (n'oubliez pas les éléments JPA - @Entity et un id)
 - Un repository FoodTrucksRepository (simplement créer l'interface)
 - Un service avec au moins une méthode pour renvoyer tous les Trucks
 - Un controller pour les afficher (à nouveau, un seul endpoint /trucks/ est suffisant pour le moment)
