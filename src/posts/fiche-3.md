@@ -194,11 +194,27 @@ Le principe est que sur un login réussi, on va renvoyer le user et un token per
 Comme vu plus haut dans "DTO", on ne veut pas renvoyer l'objet user complet vers le client, mais juste le username et le token. On va donc créer un DTO dédié pour ceci:
 
 ```java
-@Data
-@NoArgsConstructor
 public class AuthenticatedUser {
     private String username;
     private String token;
+
+    public AuthenticatedUser() {}
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
+    }
 }
 ```
 
