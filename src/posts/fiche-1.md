@@ -10,9 +10,9 @@ tags: [fiche, spring, intro]
 
 ## Objectif et organisation du cours
 
-Ceci est un cours d'introduction à [Spring](https://spring.io/) - un framework web (backend) écrit en Java. Les exercices présents dans les trois fiches de ce cours vont vous servir à apprendre à utiliser le framework pour le projet qui va suivre.
+Ceci est un cours d'introduction à [Spring](https://spring.io/) - un framework web (backend) écrit en Java. Les exercices présents dans les trois premières fiches de ce cours vont vous servir à apprendre à utiliser le framework pour le projet qui va suivre.
 
-Il ne dure que trois semaines (trois fois quatre heure d'atelier), en mode "travaux dirigés" - chaque semaine a un sujet précis et une fiche d'exercices à suivre.
+Il ne dure que trois semaines sur 5 séances, en mode "travaux dirigés" - chaque séance a un sujet précis et une fiche d'exercices à suivre.
 
 L'équipe enseigante est présente pour répondre à vos questions ou vous aider en cas de problème.
 
@@ -22,7 +22,7 @@ Le cours en lui même ne donne pas lieu à une évaluation.
 
 ### Un framework ?
 
-On distingue généralement les "bibliothèques" (librairies ou packages en anglais) des "frameworks". Ceux qui offrent un cadre de développement complet dans lequel notre code application va s'inscrire.
+On distingue généralement les "bibliothèques" (librairies ou packages en anglais) des "frameworks". Ceux qui offrent un cadre de développement complet dans lequel notre code va s'inscrire.
 
 En d'autres mots, on dit souvent qu'on appelle une bibliothèque, mais que dans le cas du framework c'est celui ci qui appelle notre code.
 
