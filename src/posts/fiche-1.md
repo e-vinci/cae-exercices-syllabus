@@ -195,7 +195,8 @@ public class HelloController {
 }
 ```
 
-Faite attention au bon placement et nommage des fichiers - Java suppose un lien direct entre les noms de classe et de package et leur position dans le répertoire. La classe ci-dessus doit donc être dans /src/main/be/vinci/cae/fiche1/controllers/HelloController.java
+Faite attention au bon placement et nommage des fichiers - Java suppose un lien direct entre les noms de classe et de package et leur position dans le répertoire. La classe ci-dessus doit donc être dans /src/main/java/
+be/vinci/cae/controllers/HelloController.java
 
 Si vous avez nommé votre projet/package différemment cela peut être une autre localisation. L'important est d'être consistant.
 
