@@ -79,10 +79,10 @@ Appuyez sur créer.
 ### Quelques explications
 
 - Language Java: C'est ce que nous faisons ici, mais à noter que la JVM [peut gérer d'autres langages que le Java](https://en.wikipedia.org/wiki/List_of_JVM_languages) - l'exemple le plus fréquent étant Kotlin, mais aussi Scala ou d'autres JRuby. Tous ces langages peuvent être compilés vers un langage de plus bas niveau (le [Java Bytecode](https://en.wikipedia.org/wiki/Java_bytecode)) que la JVM peut exécuter
-- Maven: Maven est un outil de build - une série de commande et un fichier de configuration (pom.xml) qui permet notamment de:
-- Lister les dépendances (le code externe dans votre application a besoin pour tourner)
-- Gérer des actions ("target") comme compiler, exécuter, lancer les tests sur votre projets ou même le déployer sans avoir à lancer de longues commandes
-- Packaging: Une application java va contenir de nombreux fichiers - ceux qui sont réuni dans un fichier .war ou .jar - une sorte de zip avec des méta données spécifiques (vous pouvez d'ailleurs extraire le contenu d'un .jar avec WinZip ou autres - n'hésitez pas à essayer).
+- Maven: Maven est un outil de build une série de commande et un fichier de configuration (pom.xml) qui permet notamment de:
+    - Lister les dépendances (le code externe dans votre application a besoin pour tourner)
+    - Gérer des actions ("target") comme compiler, exécuter, lancer les tests sur votre projets ou même le déployer sans avoir à lancer de longues commandes
+    - Packaging: Une application java va contenir de nombreux fichiers - ceux qui sont réuni dans un fichier .war ou .jar - une sorte de zip avec des méta données spécifiques (vous pouvez d'ailleurs extraire le contenu d'un .jar avec WinZip ou autres - n'hésitez pas à essayer).
 
 ### Petit tour du projet
 
@@ -195,7 +195,8 @@ public class HelloController {
 }
 ```
 
-Faite attention au bon placement et nommage des fichiers - Java suppose un lien direct entre les noms de classe et de package et leur position dans le répertoire. La classe ci-dessus doit donc être dans /src/main/be/vinci/cae/fiche1/controllers/HelloController.java
+Faite attention au bon placement et nommage des fichiers - Java suppose un lien direct entre les noms de classe et de package et leur position dans le répertoire. La classe ci-dessus doit donc être dans /src/main/java/
+be/vinci/cae/controllers/HelloController.java
 
 Si vous avez nommé votre projet/package différemment cela peut être une autre localisation. L'important est d'être consistant.
 
