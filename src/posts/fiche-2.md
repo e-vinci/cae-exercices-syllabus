@@ -344,7 +344,7 @@ public class CoursesService {
     }
 
     public Course updateCourse(long id, CourseUpdateDTO payload) {
-        Course existing = coursesRepository.findById(id).orElseNull();
+        Course existing = coursesRepository.findById(id).orElse(null);
         if (existing == null) {
             return null;
         }
