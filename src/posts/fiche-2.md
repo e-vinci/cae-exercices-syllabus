@@ -265,7 +265,7 @@ public class Course {
 - `@Table(name = "courses")` précise le nom de la table (sinon ce serait `course` par défaut).
 - `@Id` + `@GeneratedValue` créent la clé primaire et gèrent son auto-incrémentation.
 - `@Column(unique = true)` force une contrainte SQL
-- `@Size`, `@NotBlank`, `@Positive` sont des annotations de validation qui seront vérifiées par le controlleur lors de la création ou mise à jour d’un cours.
+- `@Size`, `@NotBlank`, `@Positive` sont des annotations de validation qui seront vérifiées par le contrôleur lors de la création ou mise à jour d’un cours.
 
 ### 5.2 Repository
 
