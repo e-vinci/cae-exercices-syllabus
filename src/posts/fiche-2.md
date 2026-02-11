@@ -349,9 +349,9 @@ public class CoursesService {
             return null;
         }
 
-        if (payload.getTitle() != null) existing.setTitle(payload.getTitle());
-        if (payload.getDescription() != null) existing.setDescription(payload.getDescription());
-        if (payload.getCredits() != null) existing.setCredits(payload.getCredits());
+        if (payload.title() != null) existing.setTitle(payload.title());
+        if (payload.description() != null) existing.setDescription(payload.description());
+        if (payload.credits() != null) existing.setCredits(payload.credits());
 
         return coursesRepository.save(existing);
     }
