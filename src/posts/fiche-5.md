@@ -17,11 +17,15 @@ La fiche de cette semaine couvre 2 aspects importants qui permettent d'améliore
 La qualité de l'API est essentielle pour offrir une expérience des développeurs optimale et maintenir la cohérence et la maintenabilité du code. 
 
 Voici quelques pratiques clés pour gérer la qualité de l'API :
-- Style guide de Google : Utiliser le style guide de Google pour les conventions de code et de nommage. Cela permet de maintenir un code propre, lisible et cohérent à travers toute l'équipe de développement.
-- Tests statiques : Utiliser des outils d'analyse statique pour vérifier la qualité du code, détecter les vulnérabilités de sécurité et appliquer les normes de codage. (Par exemple, avec Java, on peut utiliser des outils comme `Checkstyle`, `PMD` et `CPD`)
-- Architecture modulaire du code : Adopter une architecture modulaire pour le code de l'API. (Avec Spring Boot, il suffit de découper le code en `repository`, `service`, `controller` et `model`)
-- Tests unitaires avec JUnit & Mockito : Écrire des tests unitaires pour vérifier le bon fonctionnement de la logique de l'application.
-- Tests d'intégration avec Spring Boot : A l'aide de requêtes HTTP, on peut facilement tester l'intégration des différentes parties de l'API.
+- **Style guide de Google** : Utiliser le style guide de Google pour les conventions de code et de nommage. Cela permet de maintenir un code propre, lisible et cohérent à travers toute l'équipe de développement.
+
+- **Tests statiques** : Utiliser des outils d'analyse statique pour vérifier la qualité du code, détecter les vulnérabilités de sécurité et appliquer les normes de codage. (Par exemple, avec Java, on peut utiliser des outils comme `Checkstyle`, `PMD` et `CPD`)
+
+- **Architecture modulaire** du code : Adopter une architecture modulaire pour le code de l'API. (Avec Spring Boot, il suffit de découper le code en `repository`, `service`, `controller` et `model`)
+
+- **Tests unitaires** avec JUnit & Mockito : Écrire des tests unitaires pour vérifier le bon fonctionnement de la logique de l'application.
+
+- **Tests d'intégration** avec Spring Boot : A l'aide de requêtes HTTP, on peut facilement tester l'intégration des différentes parties de l'API.
 
 
 
@@ -948,7 +952,7 @@ Si nécessaire, vous pouvez trouver le code associé aux tutoriels `api` ic : [a
 
 ---
 
-# 2. Bonnes pratiques et Integration Continues
+# 2. Bonnes pratiques et Intégration Continue
 
 ## Comment nommer ses Git commits ?
 
@@ -1489,7 +1493,7 @@ Attention, le git pull n'est possible que si le pipeline de la branche principal
 
 Sous forme de résumé visuel, voici le workflow actuel pour l'intégration continue de code dans GitLab :
 
-<PlantUML src="/diagrams/ci-workflow-iteration1.puml" alt="Workflow de l'intégration continue" />
+![Workflow de l'intégration continue](fiche-5-CI-workflow.svg)
 
 Voici le résumé sous forme de texte :
 1. Un développeur ou une développeuse crée une nouvelle feature branche à partir de la branche principale.

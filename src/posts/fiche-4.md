@@ -24,15 +24,13 @@ Il existe de nombreuses librairies de composants React qui permettent de rendre 
 
 Pour ce tutoriel optionnel, nous allons utiliser **Material UI**, une librairie de composants React très populaire qui permet de créer des applications web modernes et réactives.
 
-Toute la documentation de cette librairie est disponible : https://mui.com/material-ui/
+Toute la documentation de cette librairie est disponible : <https://mui.com/material-ui/>
 
 ## Mise en place de Material UI </InternalPageTitle>
 
 ### a) Installation de Material UI
 
-Pour ce tutoriel, veuillez télécharger ce starter : <LinkFile name="/files/ui-library-starter.zip" target="_blank" download>ui-library-starter</LinkFile>
-
-Vous trouvez aussi ce starter dans le repository de ce cours : [ui-library-starter](https://github.com/e-vinci/cae-theory-demos/tree/main/ui-library-starter).
+Pour ce tutoriel, veuillez télécharger ce starter, disponible dans le repository de ce cours : [ui-library-starter](https://github.com/e-vinci/cae-theory-demos/tree/main/ui-library-starter).
 
 Veuillez renommer votre répertoire et nom de projet en  `ui-library`.
 
@@ -75,7 +73,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
 
 `MUI` met à disposition beaucoup de composants qui permettent de créer des UI en utilisant les règles de `Material Design` comme référence.
 
-Tous les composants peuvent être découverts ici : https://mui.com/material-ui/all-components/
+Tous les composants peuvent être découverts ici : <https://mui.com/material-ui/all-components/>
 
 Les composants peuvent être taillés sur mesure selon différentes stratégies. En voici les principales :
 - Customiser un seul élément d'un composant `MUI` via la prop `sx` (les valeurs sont un superset de CSS) ou via la prop `className` (pour utiliser des classes CSS personnelles);
@@ -83,7 +81,7 @@ Les composants peuvent être taillés sur mesure selon différentes stratégies.
 - Faire une surcharge d'un composant `MUI` via un `theme` ;
 - Faire une surcharge globale du CSS de certains éléments HTML en utilisant le composant `GlobalStyles`.
 
-Dans ce tutorial, nous allons explorer la première option uniquement à l'aide de `sx`. N'hésitez pas à en découvrir plus par vous-même via : https://mui.com/material-ui/customization/how-to-customize/
+Dans ce tutorial, nous allons explorer la première option uniquement à l'aide de `sx`. N'hésitez pas à en découvrir plus par vous-même via : <https://mui.com/material-ui/customization/how-to-customize/>
 
 Il existe des composants de layout qui permettent d'agencer d'autres composants horizontalement ou verticalement, principalement :
 - `Box` : Un composant qui sert de conteneur flexible pour appliquer des marges, des paddings, des alignements et d'autres styles CSS aux enfants.
@@ -398,7 +396,7 @@ const PizzaMenu = ({ pizzas }: PizzaMenuProps) => {
 export default PizzaMenu;
 ```
 
-Pour ce composant, nous avons utilisé tous les composants `MUI` permettant de créer une table HTML : https://mui.com/material-ui/react-table/#basic-table.
+Pour ce composant, nous avons utilisé tous les composants `MUI` permettant de créer une table HTML : <https://mui.com/material-ui/react-table/#basic-table>.
 
 
 Pour le menu des boissons, nous avons créé un tout nouveau design pour être basé sur des données plutôt que des composants enfants (via `children`).  
@@ -459,7 +457,7 @@ export default DrinkMenu;
 ```
 {% endraw %}
 
-Nous avons utilisé le composant `Card` du `MUI` pour l'UI de chaque boisson : https://mui.com/material-ui/react-card/.
+Nous avons utilisé le composant `Card` du `MUI` pour l'UI de chaque boisson : <https://mui.com/material-ui/react-card/>.
 
 Veuillez ensuite mettre à jour `AddPizza` (dans `/src/components/Main/AddPizza.tsx`) :
 {% raw %}
@@ -841,7 +839,7 @@ export default PizzaMenu;
 ```
 
 Nous utilisons ici la notion de `&` qui vient du monde CSS / SASS permettant de cibler des classes ou des pseudos-classes imbriquées à l'intérieur d'un sélecteur parent spécifié. Cela facilite la création de règles CSS spécifiques à des contextes particuliers sans avoir à répéter le sélecteur parent complet.  
-Si vous souhaitez en savoir plus sur cette pratique : https://mui.com/material-ui/customization/how-to-customize/#overriding-nested-component-styles
+Si vous souhaitez en savoir plus sur cette pratique : <https://mui.com/material-ui/customization/how-to-customize/#overriding-nested-component-styles>
 
 Voici comment nous stylons le composant `DrinkMenu` :
 ```tsx {8,18,24-28,34} showLineNumbers
@@ -1062,7 +1060,7 @@ Pour ce tutoriel, nous vous proposons de créer la palette de couleurs la plus s
 Il existe des outils très intéressants pour créer ses thèmes et palettes de couleurs. Vous trouvez ceux-ci ici :
 - [Material palette generator](https://m2.material.io/inline-tools/color/)
 - [mui-theme-creator](https://zenoo.github.io/mui-theme-creator/)
-- Autres outils pour générer ou découvrir des palettes : https://mui.com/material-ui/customization/color/
+- Autres outils pour générer ou découvrir des palettes : <https://mui.com/material-ui/customization/color/>
 
 Veuillez créer un fichier pour y ajouter la définition d'un nouveau thème dans `/src/themes.ts` :
 ```ts
@@ -1114,7 +1112,7 @@ Ceci termine la première partie du tutoriel consacrée à l'utilisation d'une L
 # 2. Style guide
 Le style guide de Google est une référence pour les conventions de code et de nommage en TypeScript. Il fournit des recommandations pour écrire un code propre, lisible et cohérent. En suivant les conventions du style guide de Google, vous pouvez améliorer la qualité de votre code et faciliter la collaboration au sein de l'équipe de développement.
 
-Il est disponible en ligne à l'adresse suivante : https://google.github.io/styleguide/tsguide.html.
+Il est disponible en ligne à l'adresse suivante : <https://google.github.io/styleguide/tsguide.html>.
 
 Le style guide de Google pour TypeScript couvre plusieurs aspects du développement, tels que la syntaxe, le formatage, les conventions de nommage, les bonnes pratiques et les recommandations pour la documentation du code. Il est conçu pour être utilisé avec l'outil de formatage de code Prettier, qui permet de formater automatiquement le code selon les conventions du style guide.
 
@@ -1282,9 +1280,7 @@ Afin d'utiliser un contexte nous allons avoir besoin de 3 morceaux liés les uns
 
 ## Exemple de React Context
 
-Pour ce tutoriel, veuillez télécharger ce starter : <LinkFile name="/files/context-starter.zip" target="_blank" download>context-starter</LinkFile>
-
-Vous trouvez aussi ce starter dans le repository de ce cours : [context-starter](https://github.com/e-vinci/cae-theory-demos/tree/main/context-starter).
+Pour ce tutoriel, veuillez télécharger ce starter disponible dans le repository de ce cours : [context-starter](https://github.com/e-vinci/cae-theory-demos/tree/main/context-starter).
 
 Veuillez renommer votre répertoire en  `context`.  
 Ce répertoire contient une API à installer & démarrer au sein de `auths` et une application React à installer & démarrer au sein de `front`.
