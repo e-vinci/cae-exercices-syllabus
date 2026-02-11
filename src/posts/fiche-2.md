@@ -551,8 +551,8 @@ public class Course {
 
 Explications :
 - Utilise un `Set` au lieu d'une `List` pour éviter les doublons.
-- `mappedBy = "students"` indique que c’est la classe `Student` qui possède la relation (via le champ `courses`), et que la table `courses` n’a pas de colonne supplémentaire pour gérer cette relation.
-- `@JoinTable` définit la table de jointure `enrollments` qui contient les associations entre `course_id` et `student_id`. Cette table est gérée automatiquement par JPA.
+- `mappedBy = "students"` indique que la classe `Student` est le **côté inverse** de la relation Many‑to‑Many : elle réutilise la configuration définie sur le côté `Course` et ne possède pas la table de jointure.
+- Le côté **propriétaire** de la relation est `Course`, qui déclare le champ `students` avec `@ManyToMany` et `@JoinTable`. `@JoinTable` définit la table de jointure `enrollments` qui contient les associations entre `course_id` et `student_id`. Cette table est gérée automatiquement par JPA.
 - `JsonIgnore` sur le côté `Student` évite la récursion infinie lors de la sérialisation JSON. Si vous souhaitez exposer les étudiants d’un cours, vous pouvez laisser `@JsonManagedReference` sur le côté `Course` et `@JsonBackReference` sur le côté `Student` à la place.
 - Si on souhaite stocker la date d’inscription ou la note, il est possible de transformer la table de jointure en entité propre `Enrollment` avec sa propre clé.
 - Pensez à mettre à jour les deux côtés (`course.getStudents().add(student); student.getCourses().add(course);`).
