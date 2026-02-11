@@ -6,162 +6,213 @@ date: '2026-02-13'
 tags: [fiche, spring, security]
 ---
 
-# Sécurisation
+# Spring Security & JWT
 
-La semaine passée nous avons appris les concepts suivants:
+## Pourquoi cette fiche ?
 
-- Persistence des données
-- Object-Relationnal Mapping
+Dans la fiche précédente nous avons branché notre API Spring Boot sur PostgreSQL via JPA : entités, repositories, relations et validations. Nous allons maintenant sécuriser cette application pour offrir une authentification robuste et des autorisations fines. L’objectif est double :
 
-Cette semaine nous allons ajouter les derniers éléments important pour tout backend : la gestion de la sécurité et de l'authentification.
+1. Séparer clairement authentification (qui est l’utilisateur ?) et autorisation (que peut‑il faire ?).
+2. Appliquer Spring Security, JWT et une gestion saine des secrets sur une application existante sans casser ses fonctionnalités métiers.
 
-## Objectif du projet
+### Objectifs pédagogiques
 
-Nous allons partir d'une API pour la gestion d'une pizzeria, dont les fonctionnalités suivantes ont été déjà développées :
+- Installer et configurer Spring Security, JWT (auth0 java-jwt) et spring-dotenv.
+- Hacher les mots de passe.
+- Implémenter un login qui renvoie un JWT, le vérifie dans un filtre, et bloque les requêtes illicites..
+- Sécuriser les endpoints avec des rôles et des permissions.
+- Externaliser les secrets.
 
-- Lister les pizzas disponibles (une pizza a un nom et un contenu)
-- Recupérer les informations d'une pizza à partir de son identifiant
-- Créer une nouvelle pizza
-- Supprimer une pizza
-- Editer une pizza
-- Commander une pizza
-- Inscrire des utilisateurs (un utilisateur a un pseudonyme, un mot de passe en clair pour le moment et un rôle utilisateur par défaut)
+---
 
-L'objectif de ce tutoriel va être de protéger les actions qui doivent l'être. 
+## Partie 1 — Contexte & rappels
 
-- Seuls les utilisateurs connectés pourront commander une pizza
-- Seuls les administrateurs pourront créer, supprimer et éditer des pizzas.
+### 1.1 Authentification vs Autorisation
 
-On va donc couvrir ici deux notions différentes et liées:
+- **Authentification** : vérifier l’identité.
+- **Autorisation** : vérifier les droits. On n’autorise jamais sans authentifier d’abord.
 
-- On parle d'`Authentification` pour tout ce qui est "est ce que la personne est bien qui elle prétend être". La manière la plus classique de gérer de l'authentification est via un user (souvent un email) et un password.
-- On parle d'`Authorization` pour tout ce qui est "est ce que cette personne a le droit de faire ce qu'elle souhaite" - un user peut être correctement authentifié mais ne pas avoir les droits de faire une certaine opération (créer une nouvelle pizza dans notre exemple). La solution classique s'appelle des `Roles` ou [RBAC](https://en.wikipedia.org/wiki/Role-based_access_control) - un système par lequel chaque user se voit attribuer un ou plusieurs rôles qui lui donne des droits spécifique (user, administrateur ou par exemple pour un site de contenu: reader, editor, reviewer, ...)
+Nous parlerons de Role Based Access Control (RBAC). Les utilisateurs ont des rôles (ex: `USER`, `ADMIN`) qui déterminent ce qu’ils peuvent faire. Un `USER` peut consulter les pizzas, mais seul un `ADMIN` peut en créer ou supprimer. 
 
-On voit directement qu'on ne peut pas `authoriser` quelqu'un avant de l'avoir `authentifié`.
+### 1.2 Architecture actuelle
 
-## Project setup
+Nous repartons de l’API de cours universitaire (pizza CRUD, commandes, inscription utilisateurs). Les endpoints existent déjà, mais sans sécurité. Notre travail consiste à ajouter les couches sécurité/transversal sans toucher inutilement au métier.
 
-Nous allons cloner un repository contenant le code déjà existent pour le modifier dans cette troisième fiche.
+---
 
-Cloner le repository présent ici: [https://github.com/e-vinci/cae_exercices_fiche3](https://github.com/e-vinci/cae_exercices_fiche3).
+## Partie 2 — Repartir de la fin de la fiche 2
 
-Lancez le projet (avec le docker pour Postgres ou non selon vos préférence) et vérifiez que tout est en ordre.
-Notez que le postgres fourni est fait pour tourner sur le port 5433 (et non sur le 5432 par défaut) dans le but de ne pas créer de conflit avec un Postgres installé sur votre machine.
+Plutôt que de cloner un nouveau dépôt, nous allons capitaliser sur le code produit à la fiche précédente :
 
-### DTOs
+1. Créez un nouveau module Spring Boot (par exemple `fiche3`). Gardez les mêmes dépendances qu’en fiche 2 (Spring Web, Spring Data JPA, PostgreSQL, Validation), et ajoutez les nouvelles dépendances :
+    - Spring Security (`spring-boot-starter-security`)
+    - JWT (`com.auth0:java-jwt`)
+    - Dotenv (`me.paulschwarz:spring-dotenv`)
+2. Copiez-collez les packages `controllers`, `services`, `repositories`, `models` et `resources` du projet fiche 2 vers ce nouveau module. Si vous n'êtes pas arrivé au bout ou n'êtes pas certain de votre résultat, récupérez la base de départ sur [GitHub](https://github.com/e-vinci/cae-exercices-examples/tree/main/fiche2) puis reproduisez la copie.
+3. Vérifiez que l’application démarre toujours et que les tests passent toujours.
 
-Vous allez trouvez deux répertoire au niveau du package "models":
-- Un "entities" qui correspond aux objets liés à la DB (les "Entités") comme précédemment
-- Un nommé "DTOs" avec de "simples objets java" ("POJO" en anglais: "Plain Old Java Object")
+---
 
-Ceci suit un pattern architectural appellé ["Data Transfer Object"](https://martinfowler.com/eaaCatalog/dataTransferObject.html) - le site référencé est celui de Martin Fowler, un programmeur et architecte assez connu et prolifique notemment dans sa documentation de "patterns" - des éléments de code que l'on retrouve dans beaucoup d'applications. 
+## Partie 3 — Mettre en place l’authentification sans sécurité
 
-L'idée ici est d'éviter que les objet de type "Entity" ne soient utilisé en input du controller - il n'y a par exemple aucun sens que l'utilisateur fournissent l'id de l'objet, ou le password encrypté, bien que ces champs doivent exister (et être obligatoires) au niveau de l'entité User. On crée donc des objets distincts, très simples (des champs et des accesseurs) pour ce faire.
+### Créer l'entité `User`
 
-## Tutoriel
+La version fiche 2 n’avait pas encore de table `users`. Pour pouvoir authentifier quelqu’un, il nous faut :
 
-Le tour du projet étant fait et fonctionnel (le serveur tourne et http://localhost:8080/pizzas renvoie une liste - potentiellement vide), nous allons ajouter ces features de sécurité.
+- Une entité JPA persistée dans Postgres.
+- Un repository pour la rechercher par `username`.
+- Un service et un contrôleur pour gérer l'authentification.
 
-### Nouvelles dépendances
-
-Nous allons ajouter des dépendances nécessaires:
-
-- Dans le pom.xml, faire "Edit Starters" (il faut avoir le pom.xml ouvert, l'option est proposée dans l'éditeur même) et ajouter spring security (Edit Starter permet de compléter vos settings après la création du projet)
-- Editer le pom.xml pour ajouter java-jwt (celui de com.auth0) et spring-dotenv - pour ce faire, utilisez "Generate... > Dependency"
-
-![starters](https://raw.githubusercontent.com/e-vinci/cae-exercices-syllabus/4550b38cd10a467862fef524540efc1714280126/src/posts/edit-starteds.png)
-
-Faite attention de prendre les packages exacts spécifiés (il y en a beaucoup, les confusions sont faciles !).
-
-Pourquoi ces packages:
-
-- **Spring Security** va nous permettre de facilement configurer les accès à nos différent endpoints
-- **JWT (JSON Web Token)** est une technologie pour générer des "token" après une authentification réussie. Les token servent d'alternatives aux cookies dès lors que l'on utilise un client type SPA (comme React) - des éléments sur ce sujet [ici](https://stackoverflow.com/questions/37582444/jwt-vs-cookies-for-token-based-authentication)
-- **Spring Dotenv** va nous aider à garder nos secrets (typiquement user/password utilisé pour la database) dans un format plus facile à manipuler que des variables d'environnement.
-
-Une fois ceci fait, relancez l'application et retournez sur http://localhost:8080/pizzas - que voit on?
-
-Bien que nous n'ayons fait aucune configuration, l'application n'est plus accessible sans login/password - ceci est du au fait que Spring Security fonctionne sur un principe de "deny all". En d'autres mots - si on ne spécifie rien, toutes les routes nécessitent que le user soit authentifié. Cette valeur par défaut nous embête un peu ici... mais elle a beaucoup de sens !
-
-Nous allons voir dans la suite comment mettre à jour cette configuration.
-
-### Hachage des mots de passe
-
-En première étape, on va encrypter les mots de passe avant de les sauvegarder dans la DB. L'idée est qu'on ne devrait jamais stocker de mots de passe "en clair" (ie sans êtres encryptés). N'oubliez pas que si quelqu'un met la main sur les mots de passes utilisateurs de votre application il peut non seulement l'utiliser en se faisant passer pour un de ces utilisateurs... mais également tenter sa chance avec ce même email et mot de passe dans d'autres applications (la plupart des gens utilisent les mêmes mots de passe).
-
-Il existe un grand nombre de manière d'encrypter un mot de passe - celle que l'on va utiliser (la plus courante, basée sur [bcrypt](https://en.wikipedia.org/wiki/Bcrypt)) est une opération à sens unique. En d'autre mot, si quelqu'un met la main sur le mot de passe encrypté *il lui est impossible de retrouver le mot de passe d'origine*.
-
-Mais alors, comment faire pour vérifier après ? La logique est en fait assez simple:
-
-- Le user créer son user et son mot de passe (en fournissant le mot de passe en clair)
-- On l'encrypte avec bcrypt et on sauve cette version dans la base de données
-- Quand le user revient et veut se connecter, il tape son mot de passe (à nouveau en clair)
-- On l'encrypte, et on *compare la version encryptée avec celle dans la base de données* 
-
-L'algorythme bcrypt a été implémenté dans un grand nombre de language dont en Java. La bibliotèque qui le contient est intégrée à Spring Security. On appelle cette opération d'encryption un "hashage".
-
-On peut faire une première version très simple en mettant à jour le UserService:
+Commencez par créer `User` dans `models.entities` :
 
 ```java
-    public void createOne(String username, String password) {
-        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+@Entity
+@Table(name = "users")
+public class User {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-        User user = new User();
-        user.setUsername(username);
+    @Column(nullable = false, unique = true)
+    private String username;
 
-        String hashedPassword = encoder.encode(password);
-        user.setPassword(hashedPassword);
-        user.setRole("USER");
-        userRepository.save(user);
-    }
-```
+    @Column(nullable = false)
+    private String password; // hashé
 
-La classe BCryptPasswordEncoder est présente dans le package de spring, et dispose d'une méthode "encode" que l'on utilise sur le password avant de sauvegarder.
-Pour tester ceci, le plus simple au stade actuel est d'utiliser un runner dans l'application (comme précédemment pour créer des données):
+    @Column(nullable = false)
+    private String role; // USER ou ADMIN
 
-```java
-    @Bean
-    public CommandLineRunner demo(UserService userService) {
-        return (args) -> {
-            System.out.println("Creating users");
-            userService.register("admin", "admin");
-            userService.register("user", "user");
-        };
-    }
-```
+    public User() {}
 
-Une fois l'application relancée, allez voir la DB via DataGrip - vous devriez voir deux record avec les passwords correctement encryptés:
-
-| id | password                                        | username | role |
-|----|------------------------------------------------|----------|------|
-| 2  | $2a$10$BGc4auhIrzMrEdsX3Xq25u9zhwY1Zl.emrSP2dTwUBYEyVOxGRBkC | admin    | USER |
-| 3  | $2a$10$.Dt44U9Le.w3QNTyAhTQ/ua2z7xCuqbDbu.b5A6Vgm8DFnnp1yYOW | user     | USER |
-
-
-Ceci dit, la manière dont on utilise le BCryptPasswordEncoder n'est pas très efficiente: on va recréer une instance à chaque usage. On peut adapter ceci pour utiliser le système d'injection de dépendance de Spring - on ne peut pas l'injecter directement (elle n'a pas d'annotation type @Service), nous allons donc procéder autrement.
-
-Créer un package "configuration" et dedans une classe BcryptConfiguration
-
-```java
-@Configuration
-public class BcryptConfiguration {
-
-    @Bean
-    public BCryptPasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
-
+    // getters/setters
 }
 ```
 
-[@Configuration](https://docs.spring.io/spring-framework/reference/core/beans/java/configuration-annotation.html
-) indique a Spring que cette classe n'est pas elle même un Bean, mais que ses méthodes peuvent en créer - ici la méthode "passwordEncoder" retourne un Bean de type BCryptPasswordEncoder... qui est donc lui même injectable.
+- `username` doit être unique pour identifier l’utilisateur lors du login.
+- `password` ne peut **jamais** contenir le mot de passe en clair (voir Partie 6).
+- `role` stocke la couche d’autorisation minimale (`USER`, `ADMIN`). On peut commencer simple avant d’introduire des rôles multiples.
 
-On peut donc l'injecter dans notre UserService - et l'utiliser en lieu et place de celle créee sur le moment:
+### Créer le repository
+
+Créez ensuite `UserRepository` avec une méthode de recherche par `username` :
 
 ```java
-public class UserService {
+@Repository
+public interface UserRepository extends CrudRepository<User, Long> {
+    User findByUsername(String username);
+}
+```
 
+### Créer des DTO
+
+Le projet contient deux packages : `models` (entités JPA) et `dtos`. On ne veut pas exposer directement les entités JPA (id, password hash, etc.) aux contrôleurs. Les DTO servent d’objets simples (POJO) dédiés aux échanges HTTP.
+
+Dans ce contexte :
+
+- Les **entités** représentent l’état persistant exact (avec `id`, `role`, `password` hashé).
+- Les **DTO** limitent les champs que le client peut envoyer ou recevoir (ex: un `Credentials` DTO contient seulement `username` + `password` en clair pour la phase de login).
+
+Créez deux DTO :
+- `Credentials` (username + password en clair) pour le login.
+- `AuthenticatedUser` pour représenter la réponse du login (username + token).
+
+```java
+public class Credentials {
+    @NotBlank private String username;
+    @NotBlank private String password;
+
+    // getters/setters
+}
+```
+
+```java
+public class AuthenticatedUser {
+    @NotBlank private String username;
+    @NotBlank private String token;
+
+    // getters/setters
+}
+```
+
+### Créer le service
+
+Créez un `UserService` pour gérer l’inscription et le login (sans sécurité pour l’instant, on ajoutera ça plus tard).
+
+```java
+@Service
+public class UserService {
+    private final UserRepository userRepository;
+
+    public UserService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+
+    public void register(Credentials credentials) {
+        User user = new User();
+        user.setUsername(credentials.getUsername());
+        user.setPassword(credentials.getPassword()); // à remplacer par le hash plus tard
+        user.setRole("USER");
+        userRepository.save(user);
+    }
+
+    public AuthenticatedUser login(Credentials credentials) {
+        User user = userRepository.findByUsername(credentials.getUsername());
+        if (user == null) {
+            return null; // utilisateur inconnu
+        }
+        if (!user.getPassword().equals(credentials.getPassword())) { // à remplacer par la vérification du hash plus tard
+            return null; // mot de passe incorrect
+        }
+
+        AuthenticatedUser authUser = new AuthenticatedUser();
+        authUser.setUsername(user.getUsername());
+        authUser.setToken("fake-jwt-token"); // à remplacer par le vrai token plus tard
+        return authUser;
+    }
+}
+```
+
+### Créer le contrôleur
+
+Créez enfin un `UserController` pour exposer les endpoints d’inscription et de login :
+
+```java
+@RestController
+@RequestMapping("/auths")
+public class UserController {
+
+    private final UserService userService;
+
+    public UserController(UserService userService) {
+        this.userService = userService;
+    }
+
+    @PostMapping("/register")
+    @ResponseStatus(HttpStatus.CREATED)
+    public void register(@Valid @RequestBody Credentials credentials) {
+        userService.register(credentials);
+    }
+
+    @PostMapping("/login")
+    public AuthenticatedUser login(@Valid @RequestBody Credentials credentials) {
+        AuthenticatedUser authUser = userService.login(credentials);
+        if (authUser == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+        }
+        return authUser;
+    }
+}
+```
+
+---
+
+## Partie 4 — Hashage des mots de passe
+
+On ne stocke jamais un mot de passe en clair. Ajoutez un encodeur `BCryptPasswordEncoder` dans votre service utilisateur pour hacher les mots de passe à l’inscription et les vérifier à la connexion :
+
+```java
+@Service
+public class UserService {
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder passwordEncoder;
 
@@ -170,822 +221,454 @@ public class UserService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    ...
-
-      public void createOne(String username, String password) {
+    public void register(Credentials credentials) {
         User user = new User();
-        user.setUsername(username);
-
-        String hashedPassword = passwordEncoder.encode(password);
-        user.setPassword(hashedPassword);
+        user.setUsername(credentials.getUsername());
+        user.setPassword(passwordEncoder.encode(credentials.getPassword()));
         user.setRole("USER");
         userRepository.save(user);
     }
-}
-```
 
-## Création de token JWT
+    public AuthenticatedUser login(Credentials credentials) {
+        User user = userRepository.findByUsername(credentials.getUsername());
+        if (user == null) {
+            return null; // utilisateur inconnu
+        }
+        if (!passwordEncoder.matches(credentials.getPassword(), user.getPassword())) {
+            return null; // mot de passe incorrect
+        }
 
-Nous avons maintenant des users avec des passwords correctement "hashés" dans notre base de donnée et un bean BCryptPasswordEncoder capable de vérifier si un password fourni (en clair) est identique à celui dans la DB (hashé).
-
-Reste que dans notre architecture, il va nous falloir renvoyer autre chose qu'un cookie si le user fourni (correctement) son user et mot de passe - à savoir un "token" JWT.
-Le principe est que sur un login réussi, on va renvoyer le user et un token permettant de s'authentifier lors des requêtes suivantes (vous avez sans doute déjà fait cela côté client dans vos cours de React).
-
-Comme vu plus haut dans "DTO", on ne veut pas renvoyer l'objet user complet vers le client, mais juste le username et le token. On va donc créer un DTO dédié pour ceci:
-
-```java
-public class AuthenticatedUser {
-    private String username;
-    private String token;
-
-    public AuthenticatedUser() {}
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public String getToken() {
-        return token;
-    }
-
-    public void setToken(String token) {
-        this.token = token;
+        AuthenticatedUser authUser = new AuthenticatedUser();
+        authUser.setUsername(user.getUsername());
+        authUser.setToken("fake-jwt-token"); // à remplacer par le vrai token plus tard
+        return authUser;
     }
 }
 ```
 
-Remarquer le nommage - il s'agit bien d'un utilisateur authentifié.
-
-Pour créer un token JWT il nous faut trois choses:
-
-- Un algorithme
-- Un secret
-- Une durée de vie
-
-Allons rajouter cela dans le UserService:
-
-```java
-public class UserService {
-    ...
-    private static final String jwtSecret = "ilovemypizza!";
-    private static final long lifetimeJwt = 24*60*60*1000; // 24 hours
-
-    private static final Algorithm algorithm = Algorithm.HMAC256(jwtSecret);
-```
-
-Notre secret n'est pas réellement très secret, nous changerons cela dans un moment. L'algorithme choisi est [HMAC](https://en.wikipedia.org/wiki/HMAC)-256 - le 256 indique la "force" de la fonction (et donc la difficulté de la casser).
-
-La durée parait raisonnable - c'est un équilibre entre sécurité et "convenience" - on ne veut pas demander au user de se reconnecter toutes les cinq minutes, mais sans doute plus d'une fois par an - en fonction de l'importance des données qui sont derrière.
-
-
-Ceci nous permet de créer le token correctement:
-
-```java
-    public AuthenticatedUser createJwtToken(String username) {
-        String token = JWT.create()
-                .withIssuer("auth0")
-                .withClaim("username", username)
-                .withIssuedAt(new Date())
-                .withExpiresAt(new Date(System.currentTimeMillis() + lifetimeJwt))
-                .sign(algorithm);
-
-        AuthenticatedUser authenticatedUser = new AuthenticatedUser();
-        authenticatedUser.setUsername(username);
-        authenticatedUser.setToken(token);
-
-        return authenticatedUser;
-    }
-```
-
-On voit ici que le token ne se base en rien sur le mot de passe - mais juste sur le username. On doit donc bien vérifier *avant* que le password est correct, puis seulement appeller la méthode pour créer le token.
-
-On a maintenant toutes les pièces pour pouvoir logger correctement un utilisateur, reste à les mettre ensemble dans une méthode login dans le UserService
-
-```java
-    public AuthenticatedUser login(String username, String password) {
-        User user = userRepository.findByUsername(username);
-        if (user == null) return null;
-        if (!passwordEncoder.matches(password, user.getPassword())) {
-            return null;
-        }
-        return createJwtToken(username);
-    }
-```
-
-(rajoutez la méthode `findByUsername` si elle n'existe pas encore sur le UserService)
-
-Celle ci fait donc trois opérations:
-
-- Récupère un user dans la base de données basé sur le username
-- Vérifie (via le password encoder) si le mot de passe est correct
-- Si oui, créer le token et le renvoie
-
-On appelle pas directement un service, donc il faut également avoir la méthode dans le controller:
-
-```java
-    @PostMapping("/login")
-    public AuthenticatedUser login(@RequestBody Credentials credentials) {
-        System.out.println("Loggin in controller");
-        System.out.println(credentials);
-        if (credentials == null ||
-                credentials.getUsername() == null ||
-                credentials.getUsername().isBlank() ||
-                credentials.getPassword() == null ||
-                credentials.getPassword().isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
-        }
-
-        AuthenticatedUser user = userService.login(credentials.getUsername(), credentials.getPassword());
-        if (user == null) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
-
-        return user;
-    }
-```
-
-Il nous faut encore pouvoir vérifier que le token est correct - ajoutons une méthode de plus au UserService:
-
-
-```java
-    public String verifyJwtToken(String token) {
-        try {
-            return JWT.require(algorithm).build().verify(token).getClaim("username").asString();
-        } catch (Exception e) {
-            return null;
-        }
-    }
-```
-
-La méthode délègue cette opération au package JWT, sur base du token fourni, de la variable qui a permis de le créer et du secret (via l'algorithme).
-
-Reste à s'assurer que toutes les (autres) méthodes vérifient bien le token à chaque appel 
-
-### Création d'un filtre de vérification
-
-Spring Security nous permet de définir des "filtres" - des classes qui vont agir à chaque requête et les modifier voir les bloquer si certaines conditions ne sont pas remplies.
-
-Nous allons créer un JWTAuthentificationFilter qui va vérifier si le token est correct à chaque requête:
-
+Le `BcryptPasswordEncoder` nécessite une configuration pour être injecté dans le service. Par défaut, Spring ne sait pas comment en créer un. Il faut créer un *bean*, une méthode annotée `@Bean` qui retourne une instance de `BCryptPasswordEncoder` et explique à Spring comment en construire un. Créer une classe de configuration dédiée dans un package `config` :
 
 ```java
 @Configuration
-public class JWTAuthentificationFilter  extends OncePerRequestFilter {
+public class BcryptConfiguration {
+    @Bean
+    public BCryptPasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+}
+```
+
+Ajoutez un `CommandLineRunner` pour créer `admin/admin` et `user/user`, puis ouvrez la table `users` pour vérifier que les hashes commencent bien par `$2a$`.
+
+```java
+@Bean
+public CommandLineRunner initUsers(UserRepository userRepository, BCryptPasswordEncoder passwordEncoder) {
+    return args -> {
+        User admin = new User();
+        admin.setUsername("admin");
+        admin.setPassword(passwordEncoder.encode("admin"));
+        admin.setRole("ADMIN");
+        userRepository.save(admin);
+
+        User user = new User();
+        user.setUsername("user");
+        user.setPassword(passwordEncoder.encode("user"));
+        user.setRole("USER");
+        userRepository.save(user);
+    };
+}
+```
+
+---
+
+## Partie 5 — Générer & vérifier un JWT
+
+Ajoutez les constantes au début de `UserService` pour la configuration du JWT :
+
+```java
+private static final String JWT_SECRET = "myverysecretkey"; // à externaliser plus tard
+private static final long JWT_LIFETIME = 24 * 60 * 60 * 1000; // en ms, 24h
+private static final Algorithm ALGORITHM = Algorithm.HMAC256(JWT_SECRET);
+```
+
+```java
+public AuthenticatedUser login(Credentials credentials) {
+    User user = userRepository.findByUsername(credentials.getUsername());
+    if (user == null || !passwordEncoder.matches(credentials.getPassword(), user.getPassword())) {
+        return null; // utilisateur inconnu ou mot de passe incorrect
+    }
+    return createJwtToken(credentials.getUsername());
+}
+
+public AuthenticatedUser createJwtToken(String username) {
+    String token = JWT.create()
+        .withIssuer("auth0")
+        .withClaim("username", username)
+        .withIssuedAt(new Date())
+        .withExpiresAt(new Date(System.currentTimeMillis() + JWT_LIFETIME))
+        .sign(ALGORITHM);
+
+    AuthenticatedUser result = new AuthenticatedUser();
+    result.setUsername(username);
+    result.setToken(token);
+    return result;
+}
+
+public String verifyJwtToken(String token) {
+    try {
+        return JWT.require(ALGORITHM).build().verify(token).getClaim("username").asString();
+    } catch (Exception e) {
+        return null;
+    }
+}
+```
+
+---
+
+## Partie 6 — Filtre JWT et gestion des erreurs
+
+Nous avons désormais un endpoint de login qui génère un JWT valide. Il nous faut à présent un mécanisme pour vérifier ce token à chaque requête entrante.
+
+Spring Security fonctionne avec une chaîne de filtres (FilterChain). Nous allons créer un filtre personnalisé qui s’exécutera avant les contrôles d’accès, pour extraire le JWT du header `Authorization`, le vérifier, et injecter l’identité de l’utilisateur dans le contexte de sécurité. 
+
+Créez `JwtAuthenticationFilter` dans le package `config` :
+
+```java
+@Configuration
+public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final UserService userService;
 
-    public JWTAuthentificationFilter(UserService userService) {
+    public JwtAuthenticationFilter(UserService userService) {
         this.userService = userService;
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain filterChain) throws ServletException, IOException {
         String token = request.getHeader("Authorization");
-        if (token != null) {
-            userService.verifyJwtToken(token);
+        if (token == null) { // pas de token, on bloque la requête
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid or expired JWT");
+            return; // renvoie un 401 et arrête la chaîne de filtres
         }
-        filterChain.doFilter(request, response);
+
+        String username = userService.verifyJwtToken(token);
+        if (username == null) { // token invalide ou expiré
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid or expired JWT");
+            return; // renvoie un 401 et arrête la chaîne de filtres
+        }
+
+        User user = userService.readOneFromUsername(username);
+        if (user == null) { // l'utilisateur n'existe plus
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "User not found");
+            return; // renvoie un 401 et arrête la chaîne de filtres
+        }
+
+        // token valide, la requête peut continuer
+        // l'objet `authentication` contient l'identité de l'utilisateur et ses rôles, et est stocké dans le `SecurityContext` pour être accessible partout dans l'application
+
+        List<GrantedAuthority> authorities = new ArrayList<>();
+        authorities.add(new SimpleGrantedAuthority("ROLE_USER")); // tous les utilisateurs ont au moins ce rôle
+        if ("ADMIN".equals(user.getRole())) {
+            authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN")); // les admins ont aussi ce rôle
+        }
+        
+        UsernamePasswordAuthenticationToken authentication =
+            new UsernamePasswordAuthenticationToken(user, null, authorities);
+        authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        filterChain.doFilter(request, response); // continue la chaîne de filtres
     }
 }
 ```
 
-Le code en soit n'est pas bien complexe:
+Ce filtre vérifie la présence du token, le valide, et injecte l’utilisateur dans le contexte de sécurité. En cas d’échec (token manquant, invalide ou utilisateur introuvable), il renvoie un 401 et bloque la requête.
 
-- La méthode "doFilterInternal" est appellée par Spring à chaque requête (on va voir juste après comment)
-- Elle récupère le header "Authorization", et appelle le service pour vérifier le token
-- On ne fait rien d'autre - parce que le service va lever une exception si le token n'est pas correct (et donc arrêter la requête)
+---
 
-### Configuration de la sécurité
+## Partie 7 — Configurer Spring Security
 
-Reste à lier le tout avec un fichier de configuration:
-
-```java  
+```java
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity()
+@EnableMethodSecurity
 public class SecurityConfiguration {
 
-    private final JWTAuthentificationFilter jwtAuthenticationFilter;
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
-    public SecurityConfiguration(JWTAuthentificationFilter jwtAuthenticationFilter) {
+    public SecurityConfiguration(JwtAuthenticationFilter jwtAuthenticationFilter) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
     }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         return http
-                .csrf(AbstractHttpConfigurer::disable)
-                .sessionManagement(sessionManagement ->
-                        sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-                .build();
+            .csrf(AbstractHttpConfigurer::disable)
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+            .build();
     }
 }
 ```
 
-Du côté annotation, en plus du @Configuration on trouve:
+Explications :
+- `csrf` est désactivé car nous n’utilisons pas de sessions ni de formulaires, donc pas de risque de problèmes de sécurité CSRF.
+- `sessionManagement` est configuré en `STATELESS` car nous utilisons des JWT, pas de sessions serveur.
+- `addFilterBefore` place notre `JwtAuthenticationFilter` avant le filtre de Spring Security qui gère l’authentification par formulaire (UsernamePasswordAuthenticationFilter). Ainsi, notre filtre s’exécutera à chaque requête pour vérifier le JWT.
+- `@EnableMethodSecurity` permet d’utiliser des annotations de sécurité au niveau des méthodes. Cela nous permettra de sécuriser certains endpoints avec des rôles spécifiques.
+- `@EnableWebSecurity` active la configuration de sécurité web, cela ne fonctionne pas sans.
 
-- @EnableWebSecurity
-- @EnableMethodSecurity()
+---
 
-qui vont nous permettre de définir pour chaque méthode les droits nécessaires.
+## Partie 8 — Sécuriser les endpoints selon les rôles
 
-La classe récupère notre filtre (via injection), et configure toute requête HTTP avec les opérations suivantes:
+Maintenant que nous avons un mécanisme d’authentification en place, nous pouvons sécuriser les endpoints selon les rôles. Nous allons utiliser l’annotation `@PreAuthorize` pour spécifier les règles d’accès à chaque endpoint. Nous allons appliquer les règles suivantes :
+- La consultation des cours est ouverte à tous les utilisateurs.
+- La consultation des détails du cours, des leçons et des étudiants d’un cours est réservée aux utilisateurs authentifiés.
+- La création, la modification et la suppression des cours, de leurs détails, et des leçons sont réservées aux administrateurs.
+- L’inscription et la désinscription à un cours sont possibles pour les utilisateurs eux-mêmes ou les administrateurs.
 
-- Désactiver les [CSRF](https://en.wikipedia.org/wiki/Cross-site_request_forgery) - "Cross Site Request Forgery" - un mécanisme permettant de bloquer les requêtes venant d'un domaine différent. Quelque chose de logique dans une application backend, mais qui bloquerait toutes les requêtes d'une application type "SPA" (vu que le client tourne sur une autre url)
-- Indiquer que les sessions sont STATELESS (sans état, le mode par défaut)
-- Indiquer que notre filtre doit être appellé avant celui standard de Spring
-
-### Test!
-
-Il est plus que temps de tester tout ceci - un petit fichier .http devrait faire l'affaire:
-
-{% raw %}
-```bash
-@baseUrl = http://localhost:8080
-
-### Try to login an unknow user
-POST {{baseUrl}}/auths/login
-Content-Type: application/json
-
-{
-  "username":"unknown",
-  "password":"admin"
-}
-
-### Login the default admin
-POST {{baseUrl}}/auths/login
-Content-Type: application/json
-
-{
-  "username":"admin",
-  "password":"admin"
-}
-
-
-### Create the manager user
-POST {{baseUrl}}/auths/register
-Content-Type: application/json
-
-{
-  "username":"manager",
-  "password":"manager"
-}
-
-### Login the manager user
-POST {{baseUrl}}/auths/login
-Content-Type: application/json
-
-{
-  "username":"manager",
-  "password":"manager"
-}
-```
-{% endraw %}
-
-Les deux premiers cas devraient démontrer l'application - le user "inconnu" recoit une erreur 401, tandis que l'admin recoit bien en retour un json avec un token.
-
-L'avant dernière créer un nouvel utilisateur puis se logge avec.
-
-Notre volet "authentification" est fonctionnel - reste que tout le monde peut toujours tout faire !
-
-### Authorisation et rôles
-
-Pour faire la différence entre nos deux utilisateurs nous allons donner un rôle à l'administrateur. Utilisez DataGrip ou IntelliJ pour modifier l'utilisateur `admin` directement dans la base de données, pour lui donner le rôle `ADMIN`.
-
-Une fois ceci fait il est possible de lire ces rôles et de donner des droits en conséquences. La bonne place pour faire ce code est évidemment le filter:
-
-
-```java
-@Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        String token = request.getHeader("Authorization");
-        if (token != null) {
-            String username = userService.verifyJwtToken(token);
-            if (username != null) {
-                User user = userService.readOneFromUsername(username);
-                if (user != null) {
-                    List<GrantedAuthority> authorities = new ArrayList<>();
-                    if (user.getRole().equals("ADMIN")) authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
-                    UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(user, null, authorities);
-                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                    SecurityContextHolder.getContext().setAuthentication(authentication);
-                }
-            }
-        }
-        filterChain.doFilter(request, response);
-    }
-```
-
-> Nous avons besoin de pouvoir récupérerr un utilisateur à partir de son username (méthode "readOneFromUsername") - celle ci n'existe pas encore sur le service, à vous de la créer (on va éviter d'aller directement dans le repository à partir du filtre).
-
-On a donc le début du filtre comme précédemment, mais on ne se contente plus de vérifier que le token est correct - en fonction du rôle de l'utilisateur on va lui fournir des droits ("GrantedAuthority"). Il faut bien voir ici la découpe entre notre code et celui de Spring:
-
-- A nous de définir où un utilisateur est stocké (pour nous dans une table User d'une base de donnée Postgresql) et de quel type il s'agit (on regarde le champs rôle)
-- A Spring de gérer ces "authorities" quand l'utilisateur se connecte.
-
-En d'autre mot il y a une indirection entre à quoi servent les droits et d'où ils sont issus.
-
-Ceci ne devrait rien changer à l'exécution du ficher .http - mais on peut maintenant sécuriser nos différentes méthodes via de simples annotations:
+Dans le `CourseController`, ajoutez les annotations de sécurité :
 
 ```java
 @RestController
-@RequestMapping("/pizzas")
-public class PizzaController {
-    ...
-    @PostMapping({"", "/"})
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
-    public Pizza addPizza(@RequestBody NewPizza newPizza) {
+@RequestMapping("/courses")
+public class CourseController {
+
+    // n'importe quel utilisateur authentifié ou non peut consulter la liste des cours
+    @GetMapping("/")
+    public Iterable<Course> listCourses() {
+        return coursesService.getAllCourses();
+    }
+
+    // n'importe quel utilisateur authentifié ou non peut consulter un cours
+    @GetMapping("/{id}")
+    public Course getCourse(@PathVariable long id) {
+        return coursesService.getCourse(id)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found"));
+    }
+
+    @PostMapping("/")
+    @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasRole('ADMIN')") // seul un ADMIN peut créer un cours
+    public Course createCourse(@Valid @RequestBody Course course) {
+        try {
+            return coursesService.createCourse(course);
+        } catch (IllegalStateException ex) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, ex.getMessage());
+        }
+    }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')") // seul un ADMIN peut modifier un cours
+    public Course updateCourse(@PathVariable long id, @Valid @RequestBody CourseUpdateDTO payload) {
+        try {
+            return coursesService.updateCourse(id, payload);
+        } catch (IllegalStateException ex) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, ex.getMessage());
+        } catch (NoSuchElementException ex) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, ex.getMessage());
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasRole('ADMIN')") // seul un ADMIN peut supprimer un cours
+    public void deleteCourse(@PathVariable long id) {
+        try {
+            coursesService.deleteCourse(id);
+        } catch (NoSuchElementException ex) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, ex.getMessage());
+        }
+    }
+
+    @GetMapping("/{id}/lessons")
+    @PreAuthorize("isAuthenticated()") // seuls les utilisateurs authentifiés peuvent consulter les leçons d'un cours
+    public List<Lesson> listLessons(@PathVariable long id) {
+        return coursesService.getLessons(id);
+    }
+
+    @PostMapping("/{id}/lessons")
+    @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasRole('ADMIN')") // seul un ADMIN peut ajouter une leçon à un cours
+    public Lesson addLesson(@PathVariable long id, @Valid @RequestBody LessonRequest payload) {
+        try {
+            return coursesService.addLesson(id, payload);
+        } catch (NoSuchElementException ex) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, ex.getMessage());
+        }
+    }
+
+    @DeleteMapping("/{courseId}/lessons/{lessonId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasRole('ADMIN')") // seul un ADMIN peut supprimer une leçon d'un cours
+    public void deleteLesson(@PathVariable long courseId, @PathVariable long lessonId) {
+        try {
+            coursesService.removeLesson(courseId, lessonId);
+        } catch (NoSuchElementException ex) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, ex.getMessage());
+        }
+    }
+
+    @GetMapping("/{id}/students")
+    @PreAuthorize("isAuthenticated()") // seuls les utilisateurs authentifiés peuvent consulter les étudiants d'un cours
+    public Set<Student> listStudents(@PathVariable long id) {
+        return coursesService.getStudents(id);
+    }
+
+    @PostMapping("/{courseId}/students/{studentId}")
+    @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("isAuthenticated()") // seul un ADMIN ou l'utilisateur lui-même peut s'inscrire à un cours
+    public Course enrollStudent(@PathVariable long courseId, @PathVariable long studentId, @AuthenticationPrincipal User currentUser) {
+        if (!currentUser.getId().equals(studentId) && !currentUser.getRoles().contains("ADMIN")) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You can only enroll yourself or you must be an admin");
+        }
+        try {
+            return coursesService.enrollStudent(courseId, studentId);
+        } catch (NoSuchElementException ex) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, ex.getMessage());
+        }
+    }
+
+    @DeleteMapping("/{courseId}/students/{studentId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("isAuthenticated()") // seul un ADMIN ou l'utilisateur lui-même peut se désinscrire d'un cours
+    public void unenroll(@PathVariable long courseId, @PathVariable long studentId, @AuthenticationPrincipal User currentUser) {
+        if (!currentUser.getId().equals(studentId) && !currentUser.getRoles().contains("ADMIN")) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You can only unenroll yourself or you must be an admin");
+        }
+        try {
+            coursesService.unenrollStudent(courseId, studentId);
+        } catch (NoSuchElementException ex) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, ex.getMessage());
+        }
+    }
+
+    @GetMapping("/{id}/detail")
+    @PreAuthorize("isAuthenticated()") // seuls les utilisateurs authentifiés peuvent consulter les détails d'un cours
+    public CourseDetail getDetail(@PathVariable long id) {
+        return coursesService.getDetail(id)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Course detail not found"));
+    }
+
+    @PostMapping("/{id}/detail")
+    @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasRole('ADMIN')") // seul un ADMIN peut créer ou mettre à jour les détails d'un cours
+    public CourseDetail createOrUpdateDetail(@PathVariable long id, @Valid @RequestBody CourseDetailRequest payload) {
+        try {
+            return coursesService.upsertDetail(id, payload);
+        } catch (NoSuchElementException ex) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, ex.getMessage());
+        }
+    }
+}
 ```
 
-L'unique ajout et le "PreAuthorize" qui indique à Spring de vérifier que l'utilisateur courant a bien le rôle "ROLE_ADMIN" - sans quoi il ne peut pas effectuer l'opération.
+Explications :
+- `@PreAuthorize` permet de spécifier des expressions SpEL (Spring Expression Language) pour contrôler l’accès à chaque endpoint.
+- `hasRole('ADMIN')` signifie que seul un utilisateur avec le rôle `ADMIN` peut accéder à cet endpoint.
+- `isAuthenticated()` signifie que n’importe quel utilisateur authentifié (qu’il soit `USER` ou `ADMIN`) peut accéder à cet endpoint.
+- Pour les endpoints d’inscription/désinscription, nous vérifions que l’utilisateur est soit l’utilisateur lui-même, soit un administrateur. Nous utilisons `@AuthenticationPrincipal` pour injecter l’utilisateur récupéré depuis son token par le filtre dans la méthode. Cela nous permet de faire des contrôles d’accès basés sur l’identité de l’utilisateur. Si l’utilisateur essaie de s’inscrire ou de se désinscrire pour un autre utilisateur sans être admin, nous renvoyons un 403 Forbidden.
 
-Ceci est de la sécurité *déclarative* - pas besoin de mettre des "if" partout dans le code, on peut garder cette gestion à un seul endroit (le controller - pourquoi là ?).
+Ajoutez des règles similaires dans les autres contrôleurs pour sécuriser les endpoints selon les rôles.
 
-### Test de sécurité
+---
 
-Voici à nouveau un .http pour vérifier tout ceci:
+## Partie 9 — Protéger les secrets avec `.env`
 
-{% raw %}
-```bash
-######### NORMAL OPERATION  ###########
+Certaines informations sont des secrets : des informations sensibles qui doivent rester confidentielles. C'est le cas ici des informations de connexion de la base de données et du secret JWT. Il est crucial de ne jamais les hardcoder dans le code source, car cela peut entraîner des fuites de sécurité si le code est partagé ou publié. Une erreur commune est de commit ces informations. Une fois que c'est le cas, il est trop tard. Les hackers peuvent alors accéder à ces informations sensibles, même si elles sont supprimées du dépôt par la suite. Nous allons voir deux méthodes pour externaliser ces secrets : les variables d’environnement et les fichiers `.env`.
 
-### Read all pizzas
-GET http://localhost:3000/pizzas
+### 9.1 Variables d’environnement
 
-### Read all pizzas with File variable
-@baseUrl = http://localhost:8080
+Les variables d’environnement sont une méthode simple et efficace pour stocker des secrets. Elles sont gérées par le système d’exploitation et ne font pas partie du code source. Il faut commencer par supprimer le secret JWT de `UserService` et la configuration de la base de données dans `application.properties`, puis les remplacer par des références à des variables d’environnement.
 
-GET {{baseUrl}}/pizzas
-
-### Create a pizza by using the admin account
-#### First login as the admin
-POST {{baseUrl}}/auths/login
-Content-Type: application/json
-
-{
-  "username":"admin",
-  "password":"admin"
-}
-
-> {% client.global.set("adminToken", response.body.token) %}
-
-#### Create a pizza with the admin token
-POST {{baseUrl}}/pizzas
-Content-Type: application/json
-Authorization: {{adminToken}}
-
-{
-  "title":"Magic Green",
-  "content":"Epinards, Brocolis, Olives vertes, Basilic"
-}
-
-######### ERROR OPERATION  ###########
-
-### 1. Create a pizza without a token
-POST {{baseUrl}}/pizzas
-Content-Type: application/json
-
-{
-  "title":"Magic Green",
-  "content":"Epinards, Brocolis, Olives vertes, Basilic"
-}
-
-### 2. Create a pizza without being the admin, use manager account
-#### 2.1 First login as the manager
-POST {{baseUrl}}/auths/login
-Content-Type: application/json
-
-{
-  "username":"manager",
-  "password":"manager"
-}
-
-> {% client.global.set("managerToken", response.body.token) %}
-
-#### 2.2 Try to create a pizza with the manager token
-POST {{baseUrl}}/pizzas
-Content-Type: application/json
-Authorization: {{managerToken}}
-
-{
-  "title":"Magic Green",
-  "content":"Epinards, Brocolis, Olives vertes, Basilic"
-}
-```
-{% endraw %}
-
-Soit:
-
-- Si on se log en temps qu'admin et que l'on fourni bien le token, créer une pizza fonctionne
-- Tous les autres cas (pas de token, token user) échouent.
-
-
-## Sécurisation de properties
-
-Nous parlons de sécurité... mais on vient en réalité d'introduire un gros problème à ce niveau - nos informations "sensibles" sont simplement commitées dans le repository lui même:
-
-- JWT secret
-- User & Password pour la base de données.
-
-Ces informations ne devraient *jamais* être commitée. Pourquoi ? Parce que cela veut dire que chaque développeur a accès au password de la base de données - et donc la capcité de la supprimer, ou de faire un TRUNCATE, etc.
-
-Nous devons donc trouver un moyen de retirer ces informations du code (.java ou application.properties) pour les mettre... "ailleurs".
-
-Ce "ailleurs" est dans la plupart des cas un éléments au niveau de l'OS - les variables d'environnement.
-
-### Variable d'environnement
-
-Cette notion existe dans chaque OS. En Windows, vous pouvez y accéder via le menu démarrer ("Edit system environment variables"). Ouvrir l'option est intéressant pour voir ce qui s'y trouve déjà. C'est variable selon le système, mais probablement un PATH et un ensemble de variable pour indiquer à windows où trouver certains folder (JAVA_HOME par exemple).
-
-Il est possible de définir ou de lire ces variables depuis le terminal.
-
-En power shell:
-
-```powershell
-echo $Env:PATH
-$Env:TEXT="Mon texte"
-echo $Env:TEXT
-```
-
-ou en linux
-
-```bash
-echo %PATH%
-export TEXT="Mon texte"
-echo %TEXT%
-```
-
-On peut donc créer une variable d'environnement avec notre password:
-
-```powershell
-$Env:DB_PASSWORD=cae
-```
-
-et le remplacer dans application.properties:
+Modifiez dans `application.properties` :
 
 ```properties
-spring.application.name=cae_exercices_fiche3
-
-spring.datasource.url=jdbc:postgresql://localhost:5432/cae_db
-spring.datasource.username=cae_user
 spring.datasource.password=${DB_PASSWORD}
-spring.jpa.generate-ddl=true
 ```
 
-relancez l'application qui devrait fonctionner... mais probablement pas.
+Modifiez dans `UserService` :
 
-Pourquoi ? Les variables d'environnments sont liés à un shell précis - et IntelliJ ne lance pas l'application dans le même.
+```java
+private static final String JWT_SECRET = System.getenv("JWT_SECRET");
+```
 
-Pour s'en assurer néanmoins, nous pouvons ouvrir le terminal intégré à IntelliJ et:
+Lancez ensuite l’application en définissant les variables d’environnement nécessaires :
+
+- Sous macOS/Linux :
+
+```bash
+export DB_PASSWORD=cae
+export JWT_SECRET=verysecretkeyandverylongsoastobeabletosustainabrute-force-attack
+./mvnw spring-boot:run 
+```
+
+- Sous Windows PowerShell :
 
 ```powershell
-$Env:DB_PASSWORD=cae
-.\mvnw spring-boot:run  
+$Env:DB_PASSWORD = "cae"
+$Env:JWT_SECRET = "verysecretkeyandverylongsoastobeabletosustainabrute-force-attack"
+./mvnw spring-boot:run
 ```
 
-La première ligne initialize la variable d'environnement, la seconde lance notre application avec la commande maven.
+### 9.2 Fichier `.env`
 
-Les choses devraient maintenant fonctionner - mais ce n'est pas forcément pratique.
+Plutôt que de définir manuellement les variables d’environnement à chaque lancement, nous pouvons utiliser un fichier `.env` pour stocker ces secrets de manière structurée. Nous allons utiliser la bibliothèque `spring-dotenv` pour charger automatiquement les variables d’environnement depuis ce fichier.
 
-Pour configurer ces options directement, vous pouvez éditer votre configuration de lancement "Edit configurations" et ajouter une "configuration property" - ceci va assurer que les variables soient bien configurées avant le lancement.
+Créez un fichier `.env` à la racine de `src/main/resources`. Ajoutez-le directement au `.gitignore` pour éviter de le committer! Dans ce fichier, ajoutez les secrets :
 
-![configuration properties](/images/configuration.png)
-
-Notre application ne partage donc plus ses secrets - mais leur gestion n'est pas vraiment pratique, d'autant que dans un cas réel nous pourrions avoir une douzaine de variables à configurer:
-
-```bash
-# Info DB
-DB_NAME=postgres
-DB_USER=postgres
-DB_HOST=db.mars-central-1.rds.amazonaws.com
-DB_PASSWORD=dohiputmypasswordinthecourse
-
-# Email server
-INVITE_MAIL_SENDER=support@null.org
-FRONTEND_BASE_URL=https://localhost:5173
-
-# Token for an external API (ex: to generate PDF)
-PDF_MONKEY_TOKEN=generatingpdfishellbutfrozen
-
-# Token for another external API (ex: openai)
-OPENAI_API_KEY=thisisnotarealkey
-
-# Token for file storage (ex: AWS)
-AWS_ACCESS_KEY_ID=awsisanofferyoucantunderstand
-AWS_SECRET_ACCESS_KEY=butwhenitworkitworkswell
-
-AWS_STORAGE_BUCKET_NAME=bucketbrigade
-AWS_S3_REGION_NAME=mars-central-1
-...
+```
+DB_HOST=localhost
+DB_PORT=5433
+DB_NAME=cae_db
+DB_USER=cae_user
+DB_PASSWORD=cae
+JWT_SECRET=verysecretkeyandverylongsoastobeabletosustainabrute-force-attack
 ```
 
-### .env et spring-dotenv
+Spring-dotenv lit automatiquement le fichier `.env` et alimente automatiquement l’environnement. 
 
-La manière "classique" de gérer ces variables est de créer un petit fichier .env où on va les écrire. L'éléments très important est que ce fichier .env **ne peut en aucun cas être committé**.
+Pour la configuration de la base de données, il suffit de mettre à jour `application.properties` pour référencer la variable d’environnement :
 
-Le fichier doit être créer dans src/main/resources (à côté du fichier properties)
-
-Nous allons donc directement l'ajouter au .gitignore:
-
-```bash
-...
-# .gitignore
-.env
+```properties
+spring.datasource.url=jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME}
+spring.datasource.username=${DB_USER}
+spring.datasource.password=${DB_PASSWORD}
 ```
 
-Il est très important de faire ceci directement. Retirer des informations de l'historique de git est réellement complexe.
-
-On peut alors ajouter nos secret à ce fichier (qui ne quittera donc pas notre machine)
-
-```bash
-DB_PASSWORD="cae"
-```
-
-Reste à dire à Spring d'aller lire les informations à cet endroit - on va utiliser spring-dotenv (que vous avez installé précédemment) pour cela.
-
-Il suffit de rajouter une paire de lignes dans l'application elle même:
+Nous pouvons ensuite permettre au code d'accéder aux variables d’environnement via des annotations. Ajoutez la configuration pour charger ce fichier dans la classe principale de votre application Spring Boot :
 
 ```java
-public class CaeExercicesFiche3Application {
-
+public class Fiche3Application {
     public static void main(String[] args) {
-        AnnotationConfigApplicationContext applicationContext = new AnnotationConfigApplicationContext();
-
-        // Add DotenvPropertySource to environment before registering components
-        DotenvPropertySource.addToEnvironment(applicationContext.getEnvironment());
-        SpringApplication.run(CaeExercicesFiche3Application.class, args);
+        AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
+        DotenvPropertySource.addToEnvironment(context.getEnvironment());
+        SpringApplication.run(Fiche3Application.class, args);
     }
+}
 ```
 
-Ceci dit à spring-dotenv de charger la configuration (sans paramètres, il va aller cherdcher un .env exactement là où nous l'avons placé) et de stockers ces valeurs qui sont alors disponible pour l'application.
-
-# Documentation
-
-Nous avons codé un backend et configuré de multiples endpoint - il est maintenant possible de développer un front end pour y ajouter une interface (par exemple avec React).
-
-Le problème côté front end va être de savoir:
-
-- Quels sont les endpoints disponibles ?
-- Quel(s) paramètres acceptent il ?
-
-En un mot - de la documentation.
-
-Ceci pourrait être fait manuellement (par exemple dans un fichier markdown) mais cette approche a de nombreux problèmes:
-
-- Manque de standardisation
-- Difficile de maintenir la documentation à jour avec le code
-
-Pour résoudre ces problèmes l'industrie a développé des *standards* (comme OpenAPI) et des *outils* (comme Swagger).
-
-## Documentation OpenAPI
-
-[OpenAPI](https://www.openapis.org/what-is-openapi) est une *spécification* indépendante de tout language de programmation ou outils pour définir une API.
-
-[Swagger](https://swagger.io/tools/open-source/) est un *outil* pour nous aider à produire de la documentation sur nos APIs.
-
-Le format sous jacent est souvent soit du JSON soit du YAML - les spécifications évoluant, il y a également des versions (v3 actuellement).
-
-## Générer de la documentation
-
-Nous pourrions créer un document yaml à la main - mais l'écosystème Spring propose quelque chose pour gagner du temps - un package qui va générer cette documentation basé sur nos controllers.
-
-Pour ceci, ajouter une dépendance maven:
-
-```xml
-<dependency>
-  <groupId>org.springdoc</groupId>
-  <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-  <version>2.3.0</version>
-</dependency>
-```
-
-Rédémarrez votre serveur et allez sur l'url suivante: http://localhost:8080/swagger-ui/index.html
-
-Vous devriez voir la liste complète des endpoints... et plus:
-
-- La liste est groupée par controller
-- Chaque endpoint indique son url, mais aussi la méthode HTTP
-- Il est possible d'appeller directement un endpoint - Swagger nous indique les paramètres à fournir
-
-Pour aller à la source, allez sur: http://localhost:8080/v3/api-docs (json) ou http://localhost:8080/v3/api-docs.yaml (yaml) pour sortir les documents OpenAPI.
-
-Comment ceci peut il fonctionner ? Notre code contient en fait toutes les informations nécessaires:
-
-Les classes controller ont une annotation @RestController et @RequestMapping qui indiquent les urls:
+Modifiez ensuite `UserService` pour utiliser `@Value` et injecter le secret depuis l’environnement. Cette variable ne peut plus être `static` car elle est injectée par Spring, et doit être une propriété d’instance :
 
 ```java
-@RestController
-@RequestMapping("/pizzas")
-public class PizzaController {
-  ...
+@Value("${JWT_SECRET}")
+private String jwtSecret;
 ```
 
-Les endpoints eux mêmes sont également annotés:
+---
 
-```java
-    @GetMapping("/{id}")
-    public Pizza getPizza(@PathVariable long id) {
-```
+# Tests
 
-Le package de Spring Doc récupère ces informations et les converti dans le format OpenAPI - Swagger peut alors générer le UI que nous venons de voir.
+Il est important de tester les fonctionnalités de sécurité pour s’assurer que les règles d’accès sont correctement appliquées. Voici quelques scénarios de test à considérer :
 
-### Ajouter de l'information
-
-Bien que l'UI générée soit déjà bien complète, il est possible (et souhaitable) d'ajouter des descriptions aux différents endpoint - ceci se fait via - surprise - des annotations:
-
-```java
-    @Operation(summary = "Get a pzza by its id")
-    @GetMapping("/{id}")
-    public Pizza getPizza(@PathVariable long id) {
-```
-
-Redémarrez votre serveur et retournez sur Swagger - la description est maintenant visible dans la documentation.
-
-
-## Écrire la documentation
-
-Il est parfois utile d'écrire la documentation manuellement au lieu de la générer, par exemple lorsque l'application n'a pas encore été développée ou pour exprimer des besoins.
-
-Swagger propose un éditeur en ligne pour écrire et valider la syntaxe de sa documentation, à l'adresse [editor.swagger.io](https://editor.swagger.io). Il est également possible d'écrire un fichier de documentation OpenAPI directement dans IntelliJ, en sélectionnant "New" > "OpenAPI Specification".
-
-Analysez ensuite le contenu du fichier `documentation.yaml`. Essayez de comprendre la syntaxe d'OpenAPI. Les spécifications complètes de cette syntaxe sont disponibles [sur le site de swagger](https://swagger.io/specification/). Ajoutez les spécifications nécessaires pour la route `login` que vous avez créé, ainsi que les authentifications et autorisations nécessaires.
-
-# Exercices récapitulatifs
-
-## Documentation -> Code
-
-Sur base de la documentation fournie ci-dessous, vous devez développer une API en spring répondant aux besoins demandés.
-
-```yaml
-openapi: 3.0.0
-info:
-  title: API de Gestion de Bibliothèque
-  description: API simplifiée pour gérer les livres et les utilisateurs dans une bibliothèque.
-  version: 1.0.0
-
-servers:
-  - url: http://localhost:8080
-    description: Serveur de développement local
-
-paths:
-  /books:
-    get:
-      summary: Récupérer la liste des livres
-      parameters:
-        - in: query
-          name: titleContains
-          required: false
-          schema:
-            type: string
-          description: Filtrer les livres dont le titre contient cette chaîne
-      responses:
-        '200':
-          description: Liste des livres
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Book'
-
-    post:
-      summary: Ajouter un nouveau livre
-      security:
-        - jwt: ['user']
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Book'
-      responses:
-        '201':
-          description: Livre créé
-        '400':
-          description: Requête invalide
-        '401':
-          description: Non autorisé
-
-  /books/{id}:
-    get:
-      summary: Récupérer un livre par ID
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-          description: ID du livre
-      responses:
-        '200':
-          description: Livre trouvé
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Book'
-        '404':
-          description: Livre non trouvé
-
-    delete:
-      summary: Supprimer un livre
-      security:
-        - jwt: ['admin']
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-          description: ID du livre
-      responses:
-        '204':
-          description: Livre supprimé
-        '401':
-          description: Non autorisé
-        '403':
-          description: Accès interdit
-        '404':
-          description: Livre non trouvé
-
-  /users:
-    get:
-      summary: Récupérer la liste des utilisateurs
-      security:
-        - jwt: ['admin']
-      responses:
-        '200':
-          description: Liste des utilisateurs
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/User'
-        '401':
-          description: Non autorisé
-        '403':
-          description: Accès interdit
-
-    post:
-      summary: Ajouter un nouvel utilisateur
-      security:
-        - jwt: ['admin']
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/User'
-      responses:
-        '201':
-          description: Utilisateur créé
-        '400':
-          description: Requête invalide
-        '401':
-          description: Non autorisé
-
-components:
-  schemas:
-    Book:
-      type: object
-      properties:
-        id:
-          type: integer
-        title:
-          type: string
-        author:
-          type: string
-        publishedYear:
-          type: integer
-
-    User:
-      type: object
-      properties:
-        id:
-          type: integer
-        username:
-          type: string
-        email:
-          type: string
-        role:
-          type: string
-          enum: ['admin', 'user']
-
-  securitySchemes:
-    jwt:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
-      description: Authentification par token JWT
-```
-
-Note: Cette documentation a été générée avec une IA. Que pensez vous de la qualité de cette documentation, notamment dans les descriptions fournies ? 
-
-Une documentation ne peut être utile que si elle est parfaitement correcte et répond à un maximum des questions que peut se poser un utilisateur.
-
-## Code -> Documentation
-
-Créez la documentation de l'API disponible à l'adresse [github.com/e-vinci/cae-exercices-exemple](https://github.com/e-vinci/cae-exercices-exemple). N'hésitez pas à récupérer cette API sur votre machine et à la tester pour vous assurer de bien comprendre son fonctionnement.
+1. **Test d’inscription** : Vérifiez que les utilisateurs peuvent s’inscrire avec des identifiants valides et que les mots de passe sont correctement hashés.
+2. **Test de login** : Vérifiez que les utilisateurs peuvent se connecter avec des identifiants valides et que le JWT généré est valide.
+3. **Test d’accès aux endpoints** : Vérifiez que les utilisateurs avec le rôle `USER` peuvent accéder aux endpoints autorisés et que les utilisateurs sans authentification ou avec des rôles insuffisants sont correctement bloqués.
+4. **Test de token expiré** : Vérifiez que les requêtes avec un token expiré sont rejetées avec un 401 Unauthorized.
+5. **Test de token invalide** : Vérifiez que les requêtes avec un token malformé ou signé avec une clé incorrecte sont rejetées avec un 401 Unauthorized.
+6. **Test de désinscription** : Vérifiez que les utilisateurs peuvent se désinscrire d’un cours et que les règles d’accès sont respectées.
+7. **Test de rôles** : Vérifiez que les utilisateurs avec le rôle `ADMIN` peuvent accéder à tous les endpoints, tandis que les utilisateurs avec le rôle `USER` ont des accès limités.
+8. **Test de secrets** : Vérifiez que les secrets ne sont pas exposés dans le code source et que l’application fonctionne correctement avec les secrets externalisés.
