@@ -368,8 +368,8 @@ Les records ne sont pas compatibles avec JPA parce qu'ils ne possèdent pas de c
 
 ```java
 public record CourseUpdateDTO(
-    @NotBlank @Size(max = 100) String title, 
-    @NotBlank @Size(max = 500) String description, 
+    @Size(max = 100) String title, 
+    @Size(max = 500) String description, 
     @Positive Integer credits
 ) {}
 ```
