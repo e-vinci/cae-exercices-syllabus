@@ -408,6 +408,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 Ce filtre vérifie la présence du token, le valide, et injecte l’utilisateur dans le contexte de sécurité. En cas d’échec (token manquant, invalide ou utilisateur introuvable), il renvoie un 401 et bloque la requête.
 
+Notez que la méthode `readOneFromUsername` n'existe pas encore - il faut la rajouter sur le `UserService`.
+
 ---
 
 ## Partie 7 — Configurer Spring Security
