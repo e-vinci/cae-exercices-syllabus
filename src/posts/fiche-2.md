@@ -57,45 +57,18 @@ Chaque couche parle son vocabulaire : HTTP pour le contrôleur, Java métier pou
 
 ## Partie 2 — Initialiser le projet Spring Boot
 
-Créez un nouveau projet Spring boot (`fiche2`) avec les dépendances suivantes :
+Créez un nouveau projet Spring boot (nommé `fiche2` et utilisant maven à la place de gradle), avec les dépendances suivantes :
 - `Spring Web` - pour construire une API REST.
 - `Spring Data JPA` - pour l’ORM et les repositories.
 - `PostgreSQL Driver` - pour connecter Spring à Postgres.
-- `Spring Boot Starter Validation` - pour activer les annotations de validation.
+- `Validation` - pour activer les annotations de validation.
 ---
 
 ## Partie 3 — Préparer l’environnement
 
-### Option 1 : Installer Postgres localement
+Un option serait d’installer PostgreSQL et DataGrip localement et de créer la base de données manuellement. Cependant, pour éviter les conflits avec d’autres projets ou les différentes configurations, nous allons utiliser Docker pour lancer une instance isolée de Postgres.
 
-Cette option part du principe que vous avez déjà installé PostgreSQL 16 (ou une version récente) sur votre machine.
-
-1. Démarrer le service Postgres.
-   - macOS : `brew services start postgresql@16`
-   - Linux : `sudo service postgresql start`
-   - Windows : via *Services* (`services.msc`) ou PowerShell admin `net start postgresql-x64-16` / `pg_ctl -D "C:\\Program Files\\PostgreSQL\\16\\data" start`
-2. Se connecter avec un utilisateur admin :
-   ```bash
-   psql -U postgres
-   ```
-3. Créer base + utilisateur :
-   ```sql
-   CREATE DATABASE cae_db;
-   CREATE USER cae_user WITH ENCRYPTED PASSWORD 'cae';
-   GRANT ALL PRIVILEGES ON DATABASE cae_db TO cae_user;
-   \c cae_db;
-   GRANT ALL ON SCHEMA public TO cae_user;
-   ```
-4. Vérifier l’accès :
-   ```bash
-   psql -h localhost -U cae_user -d cae_db -W
-   ```
-
-### Option 2 : Docker
-
-Plutôt que d’installer PostgreSQL localement, il est possible d’utiliser Docker pour lancer une instance isolée dans un conteneur.
-
-Plus tard dans le projet, il sera nécessaire d'utiliser Docker. Vous pouvez donc choisir cette option dès maintenant pour éviter d’avoir à faire les deux configurations.
+Plus tard dans le projet, il sera nécessaire d'utiliser Docker pour exécuter les différents services (frontend, backend, base de données). Vous pouvez donc déjà vous familiariser avec Docker dès maintenant. Nous l'utiliserons ici uniquement pour la base de données, mais il est aussi possible de conteneuriser l'application Spring Boot elle-même (ce qui sera vu plus tard dans le projet).
 
 Commencez par installer l'application Docker Desktop (Windows/macOS), ou les paquets `docker` et `docker-compose-plugin` (Linux). Vous pouvez vérifier que tout est en place avec `docker --version` et `docker compose version`.
 
@@ -165,6 +138,10 @@ Avant de créer sa table en base de données, mettons en place l'entité `Course
 ### 4.1 Modèle `Course`
 ```java
 public class Course {
+    private String title;
+    private String description;
+    private int credits;
+
     // Constructeur vide requis par JPA / Jackson
     public Course() {}
 
@@ -173,10 +150,6 @@ public class Course {
         this.description = description;
         this.credits = credits;
     }
-
-    private String title;
-    private String description;
-    private int credits;
 
     // getters / setters générés par l'IDE
 }
@@ -294,9 +267,11 @@ Une méthode annotée avec `@Bean` et retournant un `CommandLineRunner` est exé
 
 ```java
 @SpringBootApplication
-public class UniversityApplication {
+public class Fiche2Application {
 
-    ...
+    public static void main(String[] args) {
+        SpringApplication.run(Fiche2Application.class, args);
+    }
 
     @Bean
     CommandLineRunner seed(CoursesRepository coursesRepository) {
@@ -440,13 +415,11 @@ Explications :
 
 Créer `tests/courses.http` :
 ```http
-@baseUrl = http://localhost:8080
-
 ### Lister
-GET {{baseUrl}}/courses/
+GET http://localhost:8080/courses/
 
 ### Créer
-POST {{baseUrl}}/courses/
+POST http://localhost:8080/courses/
 Content-Type: application/json
 
 {
@@ -456,10 +429,10 @@ Content-Type: application/json
 }
 
 ### Lire
-GET {{baseUrl}}/courses/1
+GET http://localhost:8080/courses/1
 
 ### Mettre à jour
-PUT {{baseUrl}}/courses/1
+PUT http://localhost:8080/courses/1
 Content-Type: application/json
 
 {
@@ -468,10 +441,10 @@ Content-Type: application/json
 }
 
 ### Supprimer
-DELETE {{baseUrl}}/courses/1
+DELETE http://localhost:8080/courses/1
 
 ### Vérifier 404
-GET {{baseUrl}}/courses/1
+GET http://localhost:8080/courses/1
 ```
 
 ---
