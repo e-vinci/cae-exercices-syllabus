@@ -63,7 +63,7 @@ La version fiche 2 n’avait pas encore de table `users`. Pour pouvoir authentif
 - Un repository pour la rechercher par `username`.
 - Un service et un contrôleur pour gérer l'authentification.
 
-Commencez par créer `User` dans `models.entities` :
+Commencez par créer `User` dans `models` :
 
 ```java
 @Entity
@@ -116,23 +116,26 @@ Créez deux DTO :
 - `Credentials` (username + password en clair) pour le login.
 - `AuthenticatedUser` pour représenter la réponse du login (username + token).
 
-```java
-public class Credentials {
-    @NotBlank private String username;
-    @NotBlank private String password;
+Pour se faciliter le travail, nous allons utiliser des record - un type introduit récemment en java:
 
-    // getters/setters
-}
+```java
+public record Credentials(
+        @NotBlank String username,
+        @NotBlank String password
+) {}
 ```
 
 ```java
-public class AuthenticatedUser {
-    @NotBlank private String username;
-    @NotBlank private String token;
-
-    // getters/setters
-}
+public record AuthenticatedUser(
+        @NotBlank String username,
+        @NotBlank String token
+) {}
 ```
+
+Attention pour rappel:
+
+- Les records sont immutables - ils n'ont donc pas de setter (on créer l'objet complet dans le constructeur)
+- Les "getters" sont simplement le nom de la propriété avec des parenthèses (ex: username(), pas getUsername())
 
 ### Créer le service
 
@@ -149,24 +152,22 @@ public class UserService {
 
     public void register(Credentials credentials) {
         User user = new User();
-        user.setUsername(credentials.getUsername());
-        user.setPassword(credentials.getPassword()); // à remplacer par le hash plus tard
+        user.setUsername(credentials.username());
+        user.setPassword(credentials.password()); // à remplacer par le hash plus tard
         user.setRole("USER");
         userRepository.save(user);
     }
 
     public AuthenticatedUser login(Credentials credentials) {
-        User user = userRepository.findByUsername(credentials.getUsername());
+        User user = userRepository.findByUsername(credentials.username());
         if (user == null) {
             return null; // utilisateur inconnu
         }
-        if (!user.getPassword().equals(credentials.getPassword())) { // à remplacer par la vérification du hash plus tard
+        if (!user.getPassword().equals(credentials.password())) { // à remplacer par la vérification du hash plus tard
             return null; // mot de passe incorrect
         }
 
-        AuthenticatedUser authUser = new AuthenticatedUser();
-        authUser.setUsername(user.getUsername());
-        authUser.setToken("fake-jwt-token"); // à remplacer par le vrai token plus tard
+        AuthenticatedUser authUser = new AuthenticatedUser(user.getUsername(), "fake-jwt-token");
         return authUser;
     }
 }
@@ -223,14 +224,14 @@ public class UserService {
 
     public void register(Credentials credentials) {
         User user = new User();
-        user.setUsername(credentials.getUsername());
-        user.setPassword(passwordEncoder.encode(credentials.getPassword()));
+        user.setUsername(credentials.username());
+        user.setPassword(passwordEncoder.encode(credentials.password()));
         user.setRole("USER");
         userRepository.save(user);
     }
 
     public AuthenticatedUser login(Credentials credentials) {
-        User user = userRepository.findByUsername(credentials.getUsername());
+        User user = userRepository.findByUsername(credentials.username());
         if (user == null) {
             return null; // utilisateur inconnu
         }
@@ -238,9 +239,7 @@ public class UserService {
             return null; // mot de passe incorrect
         }
 
-        AuthenticatedUser authUser = new AuthenticatedUser();
-        authUser.setUsername(user.getUsername());
-        authUser.setToken("fake-jwt-token"); // à remplacer par le vrai token plus tard
+        AuthenticatedUser authUser = new AuthenticatedUser(user.getUsername(), "fake-jwt-token"); // à remplacer par le vrai token plus tard
         return authUser;
     }
 }
@@ -293,11 +292,11 @@ private static final Algorithm ALGORITHM = Algorithm.HMAC256(JWT_SECRET);
 
 ```java
 public AuthenticatedUser login(Credentials credentials) {
-    User user = userRepository.findByUsername(credentials.getUsername());
-    if (user == null || !passwordEncoder.matches(credentials.getPassword(), user.getPassword())) {
+    User user = userRepository.findByUsername(credentials.username());
+    if (user == null || !passwordEncoder.matches(credentials.password(), user.getPassword())) {
         return null; // utilisateur inconnu ou mot de passe incorrect
     }
-    return createJwtToken(credentials.getUsername());
+    return createJwtToken(credentials.username());
 }
 
 public AuthenticatedUser createJwtToken(String username) {
@@ -308,9 +307,7 @@ public AuthenticatedUser createJwtToken(String username) {
         .withExpiresAt(new Date(System.currentTimeMillis() + JWT_LIFETIME))
         .sign(ALGORITHM);
 
-    AuthenticatedUser result = new AuthenticatedUser();
-    result.setUsername(username);
-    result.setToken(token);
+    AuthenticatedUser result = new AuthenticatedUser(username, token);
     return result;
 }
 
@@ -393,7 +390,7 @@ Ce filtre vérifie la présence du token, le valide, et injecte l’utilisateur 
 ```java
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity
+@EnableMethodSecurity()
 public class SecurityConfiguration {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
