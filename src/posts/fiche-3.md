@@ -44,7 +44,7 @@ Nous repartons de l’API de cours universitaire dévelopée dans la fiche préc
 
 Plutôt que de cloner un nouveau dépôt, nous allons capitaliser sur le code produit à la fiche précédente :
 
-1. Créez un nouveau module Spring Boot (par exemple `fiche3`). Gardez les mêmes dépendances qu’en fiche 2 (Spring Web, Spring Data JPA, PostgreSQL, Validation), et ajoutez les nouvelles dépendances :
+1. Créez un nouveau module Spring Boot (par exemple `fiche3`). **Mettez la version de Java à 25** (nous allons utiliser certaines fonctionnalités récentes). Gardez les mêmes dépendances qu’en fiche 2 (Spring Web, Spring Data JPA, PostgreSQL, Validation), et ajoutez les nouvelles dépendances :
     - Spring Security (`spring-boot-starter-security`)
     - JWT (`com.auth0:java-jwt`)
     - Dotenv (`me.paulschwarz:spring-dotenv`)
