@@ -320,6 +320,31 @@ public String verifyJwtToken(String token) {
 }
 ```
 
+### Test
+
+Un fichier .http va nous permettre de tester ce endpoint:
+
+```http
+
+### Login with valid credentials (admin/admin)
+POST http://localhost:8080/auths/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "admin"
+}
+
+### Login with incorrect password (should return 401 Unauthorized)
+POST http://localhost:8080/auths/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "wrongpassword"
+}
+```
+
 ---
 
 ## Partie 6 — Filtre JWT et gestion des erreurs
