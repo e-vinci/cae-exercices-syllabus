@@ -19,7 +19,7 @@ Dans la fiche précédente nous avons branché notre API Spring Boot sur Postgre
 
 - Installer et configurer Spring Security, JWT (auth0 java-jwt) et spring-dotenv.
 - Hacher les mots de passe.
-- Implémenter un login qui renvoie un JWT, le vérifie dans un filtre, et bloque les requêtes illicites..
+- Implémenter un login qui renvoie un JWT, le vérifie dans un filtre, et bloque les requêtes illicites.
 - Sécuriser les endpoints avec des rôles et des permissions.
 - Externaliser les secrets.
 
@@ -36,7 +36,7 @@ Nous parlerons de Role Based Access Control (RBAC). Les utilisateurs ont des rô
 
 ### 1.2 Architecture actuelle
 
-Nous repartons de l’API de cours universitaire (pizza CRUD, commandes, inscription utilisateurs). Les endpoints existent déjà, mais sans sécurité. Notre travail consiste à ajouter les couches sécurité/transversal sans toucher inutilement au métier.
+Nous repartons de l’API de cours universitaire dévelopée dans la fiche précédente. Les endpoints existent déjà, mais sans sécurité. Notre travail consiste à ajouter les couches sécurité/transversal sans toucher inutilement au métier.
 
 ---
 
@@ -522,7 +522,7 @@ public class CourseController {
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("isAuthenticated()") // seul un ADMIN ou l'utilisateur lui-même peut s'inscrire à un cours
     public Course enrollStudent(@PathVariable long courseId, @PathVariable long studentId, @AuthenticationPrincipal User currentUser) {
-        if (!currentUser.getId().equals(studentId) && !currentUser.getRoles().contains("ADMIN")) {
+        if (!Objects.equals(currentUser.getId(), studentId) && !Objects.equals(currentUser.getRole(), "ADMIN")) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You can only enroll yourself or you must be an admin");
         }
         try {
@@ -536,7 +536,7 @@ public class CourseController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("isAuthenticated()") // seul un ADMIN ou l'utilisateur lui-même peut se désinscrire d'un cours
     public void unenroll(@PathVariable long courseId, @PathVariable long studentId, @AuthenticationPrincipal User currentUser) {
-        if (!currentUser.getId().equals(studentId) && !currentUser.getRoles().contains("ADMIN")) {
+        if (!Objects.equals(currentUser.getId(), studentId) && !Objects.equals(currentUser.getRole(), "ADMIN")) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You can only unenroll yourself or you must be an admin");
         }
         try {
@@ -593,7 +593,13 @@ spring.datasource.password=${DB_PASSWORD}
 Modifiez dans `UserService` :
 
 ```java
-private static final String JWT_SECRET = System.getenv("JWT_SECRET");
+private static final String JWT_SECRET;
+static {
+    JWT_SECRET = System.getenv("JWT_SECRET");
+    if (JWT_SECRET == null || JWT_SECRET.isBlank()) {
+        throw new IllegalStateException("JWT_SECRET environment variable not set");
+    }
+}
 ```
 
 Lancez ensuite l’application en définissant les variables d’environnement nécessaires :
@@ -618,7 +624,7 @@ $Env:JWT_SECRET = "verysecretkeyandverylongsoastobeabletosustainabrute-force-att
 
 Plutôt que de définir manuellement les variables d’environnement à chaque lancement, nous pouvons utiliser un fichier `.env` pour stocker ces secrets de manière structurée. Nous allons utiliser la bibliothèque `spring-dotenv` pour charger automatiquement les variables d’environnement depuis ce fichier.
 
-Créez un fichier `.env` à la racine de `src/main/resources`. Ajoutez-le directement au `.gitignore` pour éviter de le committer! Dans ce fichier, ajoutez les secrets :
+Créez un fichier `.env` à la racine du projet. Ajoutez-le directement au `.gitignore` pour éviter de le committer! Dans ce fichier, ajoutez les secrets :
 
 ```
 DB_HOST=localhost
