@@ -48,6 +48,9 @@ Plutôt que de cloner un nouveau dépôt, nous allons capitaliser sur le code pr
     - Spring Security (`spring-boot-starter-security`)
     - JWT (`com.auth0:java-jwt`)
     - Dotenv (`me.paulschwarz:spring-dotenv`)
+
+Pour Dotenv & JWT il faudra les ajouter manuellement dans le pom.xml, ils ne sont pas disponible dans le "menu" de création.
+
 2. Copiez-collez les packages `controllers`, `services`, `repositories`, `models` et `resources` du projet fiche 2 vers ce nouveau module. Si vous n'êtes pas arrivé au bout ou n'êtes pas certain de votre résultat, récupérez la base de départ sur [GitHub](https://github.com/e-vinci/cae-exercices-examples/tree/main/fiche2) puis reproduisez la copie.
 3. Vérifiez que l’application démarre toujours et que les tests passent toujours.
 
