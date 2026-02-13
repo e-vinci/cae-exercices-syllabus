@@ -320,30 +320,6 @@ public String verifyJwtToken(String token) {
 }
 ```
 
-### Test
-
-Un fichier .http va nous permettre de tester ce endpoint:
-
-```http
-
-### Login with valid credentials (admin/admin)
-POST http://localhost:8080/auths/login
-Content-Type: application/json
-
-{
-  "username": "admin",
-  "password": "admin"
-}
-
-### Login with incorrect password (should return 401 Unauthorized)
-POST http://localhost:8080/auths/login
-Content-Type: application/json
-
-{
-  "username": "admin",
-  "password": "wrongpassword"
-}
-```
 
 ---
 
@@ -443,6 +419,31 @@ Explications :
 - `addFilterBefore` place notre `JwtAuthenticationFilter` avant le filtre de Spring Security qui gère l’authentification par formulaire (UsernamePasswordAuthenticationFilter). Ainsi, notre filtre s’exécutera à chaque requête pour vérifier le JWT.
 - `@EnableMethodSecurity` permet d’utiliser des annotations de sécurité au niveau des méthodes. Cela nous permettra de sécuriser certains endpoints avec des rôles spécifiques.
 - `@EnableWebSecurity` active la configuration de sécurité web, cela ne fonctionne pas sans.
+
+### Test
+
+Un fichier .http va nous permettre de tester ce endpoint:
+
+```http
+
+### Login with valid credentials (admin/admin)
+POST http://localhost:8080/auths/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "admin"
+}
+
+### Login with incorrect password (should return 401 Unauthorized)
+POST http://localhost:8080/auths/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "wrongpassword"
+}
+```
 
 ---
 
