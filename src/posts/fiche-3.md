@@ -46,8 +46,8 @@ Plutôt que de cloner un nouveau dépôt, nous allons capitaliser sur le code pr
 
 1. Créez un nouveau module Spring Boot (par exemple `fiche3`). **Mettez la version de Java à 25** (nous allons utiliser certaines fonctionnalités récentes). Gardez les mêmes dépendances qu’en fiche 2 (Spring Web, Spring Data JPA, PostgreSQL, Validation), et ajoutez les nouvelles dépendances :
     - Spring Security (`spring-boot-starter-security`)
-    - JWT (`com.auth0:java-jwt`)
-    - Dotenv (`me.paulschwarz:spring-dotenv`)
+    - JWT (`com.auth0:java-jwt:4.5.0`)
+    - Dotenv (`me.paulschwarz:spring-dotenv:5.1.0`)
 
 Pour Dotenv & JWT il faudra les ajouter manuellement dans le pom.xml, ils ne sont pas disponible dans le "menu" de création.
 
