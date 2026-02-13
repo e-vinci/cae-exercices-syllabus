@@ -370,9 +370,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
         String token = request.getHeader("Authorization");
-        if (token == null) { // pas de token, on bloque la requête
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid or expired JWT");
-            return; // renvoie un 401 et arrête la chaîne de filtres
+        if (token == null) {
+            filterChain.doFilter(request, response); // pas de token, on laisse Spring Security décider
+            return;
         }
 
         String username = userService.verifyJwtToken(token);
