@@ -1038,20 +1038,10 @@ const Footer = () => {
 export default Footer;
 ```
 
-Nous avons maintenant une application qui commence à être bien stylée !
+Nous avons maintenant une application qui commence à être bien stylée et fonctionnelle !
 
-Il y a un souci qui est visible sur toutes les applications offertes par les templates de projet de `MUI`. Il y a toujours un espace, une sorte de marge en bas de page, après notre `Footer`.
-
-Pour résoudre ce souci, qui ne semble malheureusement pas documenté sur le Web, il vous est proposé d'ajouter une seule feuille de style à votre application, au niveau de `/src/main.tsx`, veuillez importer `/src/index.css` contenant ce code :
-```css
-div#root {
-  width: 100%;
-  display: inline-block; /* avoid margins to collapse to avoid vertical scrollbar */
-}
-```
 {% endraw %}
 
-Wow, nous avons quelque chose de fonctionnel !
 
 ## Création de son propre thème
 
