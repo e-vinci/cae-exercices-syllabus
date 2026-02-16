@@ -377,7 +377,7 @@ const PizzaMenu = ({ pizzas }: PizzaMenuProps) => {
         <TableHead>
           <TableRow>
             <TableCell>Pizza</TableCell>
-            <TableCell>æ©escription</TableCell>
+            <TableCell>Description</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -409,7 +409,7 @@ import {
   CardMedia,
   CardContent,
   Typography,
-  Grid2,
+  Grid,
 } from "@mui/material";
 import { Drink } from "../../types";
 
@@ -424,9 +424,9 @@ const DrinkMenu = ({ title, drinks }: DrinkMenuProps) => {
       <Typography variant="h4" gutterBottom>
         {title}
       </Typography>
-      <Grid2 container spacing={3}>
+      <Grid container spacing={3}>
         {drinks.map((drink, index) => (
-          <Grid2 size={{ xs: 12, sm: 6 }} key={index}>
+          <Grid size={{ xs: 12, sm: 6 }} key={index}>
             <Card>
               <CardMedia
                 component="img"
@@ -446,9 +446,9 @@ const DrinkMenu = ({ title, drinks }: DrinkMenuProps) => {
                 </Typography>
               </CardContent>
             </Card>
-          </Grid2>
+          </Grid>
         ))}
-      </Grid2>
+      </Grid>
     </Container>
   );
 };
@@ -849,7 +849,7 @@ import {
   CardMedia,
   CardContent,
   Typography,
-  Grid2,
+  Grid,
   useTheme,
 } from "@mui/material";
 import { Drink } from "../../types";
@@ -874,9 +874,9 @@ const DrinkMenu = ({ title, drinks }: DrinkMenuProps) => {
       >
         {title}
       </Typography>
-      <Grid2 container spacing={3}>
+      <Grid container spacing={3}>
         {drinks.map((drink, index) => (
-          <Grid2 size={{ xs: 12, sm: 6 }} key={index}>
+          <Grid size={{ xs: 12, sm: 6 }} key={index}>
             <Card>
               <CardMedia
                 component="img"
@@ -896,9 +896,9 @@ const DrinkMenu = ({ title, drinks }: DrinkMenuProps) => {
                 </Typography>
               </CardContent>
             </Card>
-          </Grid2>
+          </Grid>
         ))}
-      </Grid2>
+      </Grid>
     </Container>
   );
 };
