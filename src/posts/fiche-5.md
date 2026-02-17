@@ -14,7 +14,7 @@ La fiche de cette semaine couvre 2 aspects importants qui permettent d'améliore
 
 # 1. Comment gérer la qualité du code backend
 
-La qualité de l'API est essentielle pour offrir une expérience des développeurs optimale et maintenir la cohérence et la maintenabilité du code. 
+La qualité de l'API est essentielle pour offrir une expérience optimale aux développeurs et maintenir la cohérence et la maintenabilité du code. 
 
 Voici quelques pratiques clés pour gérer la qualité de l'API :
 - **Style guide de Google** : Utiliser le style guide de Google pour les conventions de code et de nommage. Cela permet de maintenir un code propre, lisible et cohérent à travers toute l'équipe de développement.
@@ -75,10 +75,8 @@ Pour mettre en place le Checkstyle dans IntelliJ, suivez les étapes suivantes :
 - Allez dans les paramètres d'IntelliJ (`IntelliJ IDEA` > `Settings` > `Plugins` > `Marketplace`).
 - Téléchargez le plugin `Checkstyle-IDEA` depuis le *Marketplace* d'IntelliJ.
 - Redémarrez IntelliJ pour activer le plugin.
-- Redémarrez IntelliJ pour activer le plugin.
 - Allez dans les paramètres d'IntelliJ (`IntelliJ IDEA` > `Settings`).
 - Cherchez `Checkstyle` dans la barre de recherche.
-- Cliquez sur `+` pour ajouter un nouveau fichier de configuration.
 - Sélectionnez dans `Configuration File` : `Google Checks`.
 - Cliquez sur `OK` pour valider la configuration.
 
@@ -96,7 +94,7 @@ Vous avez maintenant accès à un nouvel onglet `Checkstyle` (dans la barre à g
 Sélectionnez le fichier `PizzaService`. Cliquez sur l'onglet `Checkstyle` pour voir les problèmes de style dans votre code Java. Vous pouvez checker le style soit pour le fichier courant, soit pour tout le projet :
 - Cliquez sur le bouton `Play` pour lancer le checkstyle pour le fichier courant.
 - Cliquez sur le bouton `Check Project` pour lancer le checkstyle pour tout le projet.
-  Le Checkstyle a trouvé 393 "Warnings" à corriger dans le projet. Vous pouvez les corriger un par un en cliquant sur le bouton `Fix` à côté de chaque élément.
+  Le Checkstyle a trouvé 393 "Warnings" à corriger dans le projet. 
 
 ## Quelle bonne dose de commentaires dans du code Java ?
 
@@ -119,139 +117,6 @@ L'idée générale est d'avoir **juste assez de commentaires** pour rendre le co
 **Éviter les commentaires inutiles**
 - Pas besoin de commenter du code trivial.
 - Si un commentaire explique **quelque chose qui peut être clarifié en renommant une variable ou en refactorisant le code**, il est inutile.
-
-## Comment automatiser l'exécution d'un projet Maven ?
-
-### Introduction
-
-Nous souhaitons aller vers une automatisation de l'exécution de notre projet Maven et des tests associés. Pour cela, nous allons utiliser les fonctionnalités de Maven pour automatiser les phases de construction, de test et de déploiement de notre projet.
-
-### Phases principales de Maven
-
-Maven est un outil de gestion de projet et de compréhension qui permet de gérer les dépendances et de construire des projets Java. Voici les phases principales du cycle de vie de Maven :
-
-1. **validate** :
-    - Valide que le projet est correct et que toutes les informations nécessaires sont disponibles.
-
-2. **compile** :
-    - Compile le code source du projet.
-
-3. **test** :
-    - Exécute les tests unitaires en utilisant un framework de test approprié. Les tests ne sont pas obligatoires pour le packaging.
-    - On peut aussi configurer le projet pour exécuter les tests statiques (comme Checkstyle, PMD, CPD) à cette phase.
-
-4. **package** :
-    - Prend le code compilé et l'emballe dans son format distribué, tel qu'un JAR ou un WAR.
-
-5. **verify** :
-    - Exécute toutes les vérifications nécessaires pour s'assurer que le package est valide et respecte les critères de qualité.
-
-6. **install** :
-    - Installe le package dans le référentiel local, pour l'utiliser comme dépendance dans d'autres projets locaux.
-
-7. **deploy** :
-    - Copie le package final dans un référentiel distant pour le partager avec d'autres développeurs et projets.
-
-### Commandes Maven courantes
-
-- **mvn clean** :
-    - Nettoie le répertoire de construction en supprimant tous les fichiers générés par les builds précédents.
-
-- **mvn compile** :
-    - Compile le code source du projet.
-
-- **mvn test** :
-    - Exécute les tests unitaires (et tous les autres tests que l'on souhaite voir effectué dans cette phase).
-
-- **mvn package** :
-    - Emballe le code compilé dans un JAR ou un WAR.
-
-- **mvn install** :
-    - Installe le package dans le référentiel local.
-
-- **mvn deploy** :
-    - Déploie le package dans un référentiel distant.
-
-- **mvn site** :
-    - Génère la documentation du projet.
-
-- **mvn site-deploy** :
-    - Déploie la documentation générée sur un serveur web ou un autre emplacement de déploiement.
-
-- **mvn spring-boot:run** :
-    - Compile le code source et démarre une application Spring Boot. Cette commande compile le code, mais n'exécute pas les tests.
-
-### Exemple
-
-Lorsque vous exécutez la commande suivante :
-
-```sh
-mvn clean spring-boot:run
-```
-
-Les phases suivantes sont exécutées :
-
-1. **clean** : Nettoie le répertoire de construction en supprimant tous les fichiers générés par les builds précédents.
-2. **compile** : Compile le code source du projet.
-3. **spring-boot:run** : Démarre l'application Spring Boot en utilisant le code compilé. Cette commande compile le code, mais n'exécute pas les tests.
-
-### Installation de Maven
-
-Pour utiliser Maven, vous devez d'abord l'installer sur votre machine. Voici comment installer Maven sur différentes plateformes :
-- **Windows** : Téléchargez l'archive binaire de Maven depuis le site officiel de Maven, extrayez-la dans un répertoire de votre choix et configurez les variables d'environnement. Voici un tutoriel pour installer Maven sur Windows : https://phoenixnap.com/kb/install-maven-windows
-- **MacOS** : Vous pouvez installer Maven à l'aide de Homebrew en exécutant la commande suivante : **`brew install maven`**  
-  Si vous n'avez pas Homebrew, vous pouvez l'installer en exécutant la commande suivante : **`/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"`**
-- **Linux** : Vous pouvez installer Maven à l'aide de votre gestionnaire de paquets Linux. Voici un tutoriel pour installer Maven sur Ubuntu : https://www.digitalocean.com/community/tutorials/install-maven-linux-ubuntu
-
-Pour vérifier que Maven est correctement installé sur votre machine, exécutez la commande suivante dans un terminal :
-
-```sh
-mvn -version
-```
-
-### Démarrer votre API à l'aide de Maven
-
-Veuillez tenter de démarrer votre API à l'aide de Maven en exécutant la commande suivante au sein d'un terminal d'IntelliJ :
-
-```sh
-mvn clean spring-boot:run
-```
-
-On voit que cela ne fonctionne pas. En effet, Spring Boot utilise `Lombok` pour générer du code à la compilation pour les classes annotées : `Lombok` génère des getters, des setters... Il faut donc ajouter la dépendance `Lombok` à votre projet Maven.
-
-Au sein de **`<plugins>`** dans **`pom.xml`**, ajoutez la dépendance suivante :
-
-```xml
-<plugin>
-   <groupId>org.apache.maven.plugins</groupId>
-   <artifactId>maven-compiler-plugin</artifactId>
-   <version>3.8.1</version>
-   <configuration>
-      <annotationProcessorPaths>
-      <path>
-         <groupId>org.projectlombok</groupId>
-         <artifactId>lombok</artifactId>
-         <version>1.18.34</version>
-      </path>
-      </annotationProcessorPaths>
-      <source>21</source>
-      <target>21</target>
-      <compilerArgs>
-      <arg>-parameters</arg>
-      </compilerArgs>
-   </configuration>
-</plugin>
-```
-
-Veuillez démarrer votre API à l'aide de Maven en exécutant la commande suivante au sein d'un terminal d'IntelliJ :
-
-```sh
-mvn clean spring-boot:run
-```
-
-Tout devrait fonctionner correctement maintenant.
-
-Pour stopper l'exécution de l'API, vous pouvez utiliser le raccourci clavier **`Ctrl + C`** dans le terminal d'IntelliJ.
 
 ## Comment automatiser l'exécution du Checkstyle ?
 
@@ -948,7 +813,7 @@ Attention : si vous avez un échec dans vos tests, le rapport de couverture de t
 
 En cas d'échecs de tests, vous pouvez consulter le rapport de test au format texte dans le répertoire **`/target/surefire-reports`** pour voir les erreurs de test.
 
-Si nécessaire, vous pouvez trouver le code associé aux tutoriels `api` ic : [api](https://github.com/e-vinci/cae-theory-demos/tree/main/api).
+Si nécessaire, vous pouvez trouver le code associé aux tutoriels `api` ici : [api](https://github.com/e-vinci/cae-theory-demos/tree/main/api).
 
 ---
 
@@ -1056,7 +921,7 @@ Sa spécification est disponible sur le site : https://conventional-branch.githu
 
 Chaque nom de branche doit inclure un **`type`** et une **`description`** :
 
-```text
+```txt
 <type>/<description>
 ```
 
