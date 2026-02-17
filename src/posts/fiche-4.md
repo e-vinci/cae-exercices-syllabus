@@ -1194,7 +1194,7 @@ Veuillez ensuite créer le fichier de configuration du formatter `.prettierrc` a
 
 **`"printWidth": 80`** permet de limiter la largeur de ligne à 80 caractères.
 
-Veuillez ensuite mettre à `package.json` pour ajouter le script "format" (et vous assurer que le script "lint" est bien présent) :
+Veuillez ensuite mettre à jour `package.json` pour ajouter le script "format" (et vous assurer que le script "lint" est bien présent) :
 
 ```json {4,6}
 "scripts": {
