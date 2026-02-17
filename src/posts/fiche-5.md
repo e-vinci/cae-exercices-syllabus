@@ -1160,9 +1160,9 @@ Pour pouvoir configurer ces paramètres, vous devez avoir un rôle de `Maintaine
 Lorsque vous créez un projet GitLab, nous vous recommandons de configurer GitLab afin de protéger la branche principale, de configurer les *merge requests* pour qu'elles soient validées par un autre membre de l'équipe avant d'être fusionnées, et de configurer un pipeline d'intégration continue qui exécute les tests unitaires et vérifie la qualité du code.
 
 Pour les étudiants Vinci, concernant le projet GitLab associé à votre groupe :
-- vos enseignants ont tenté de paramétrer un maximum de règles au niveau du groupe `2025-cae-projects`, puis d'autres règles plus fines au niveau de votre projet GitLab `cae-group-xy` se trouvant dans le groupe `2025-cae-projects`.
+- vos enseignants ont tenté de paramétrer un maximum de règles au niveau du groupe `2026-cae-projects`, puis d'autres règles plus fines au niveau de votre projet GitLab `cae-group-xy` se trouvant dans le groupe `2026-cae-projects`.
 - vous devez avoir créé un compte GitLab en suivant toutes les consignes données ci-dessus.
-- vous recevrez un email confirmant que vous avez été ajouté au projet ` e-vinci / cae-projects / 2025-cae-projects / cae-group-xy` avec le rôle de `Maintainer`.
+- vous recevrez un email confirmant que vous avez été ajouté au projet ` e-vinci / cae-projects / 2026-cae-projects / cae-group-xy` avec le rôle de `Maintainer`.
 - ce rôle de `Maintainer` vous permettra de créer des *merge requests* et de les fusionner. Vous pouvez également configurer le pipeline d'intégration continue pour exécuter les tests et vérifier la qualité du code.  **👉 CONSIGNE** : attention, avec le rôle de `Maintainer`, vous avez la possibilité de configurer les règles de protection de la branche principale, et les règles de *merge requests*. Ces règles ont été configurées par vos enseignants. Nous vous demandons de ne pas les modifier, sauf demande explicite de vos enseignants.
 
 Pour information, voici les différents rôles disponible dans GitLab :
@@ -1323,7 +1323,7 @@ git config --global core.autocrlf false
 Pour vous assurer que vous clonez votre projet GitLab avec votre nouveau compte GitLab, nous vous recommandons cette commande :
 
 ```bash
-git clone https://<votre-username-GitLab>@GitLab.com/e-vinci/cae-projects/2025-cae-projects/cae-group-<xy>.git
+git clone https://<votre-username-GitLab>@GitLab.com/e-vinci/cae-projects/2026-cae-projects/cae-group-<xy>.git
 ```
 
 En clonant votre projet GitLab avec votre nouveau compte GitLab, vous vous assurez que vous avez les droits nécessaires pour pousser vos modifications sur votre projet GitLab. Git va ajouter une remote `origin` avec votre nouveau compte GitLab.  
@@ -1493,7 +1493,7 @@ Attention, le git pull n'est possible que si le pipeline de la branche principal
 
 Sous forme de résumé visuel, voici le workflow actuel pour l'intégration continue de code dans GitLab :
 
-![Workflow de l'intégration continue](fiche-5-CI-workflow.svg)
+![Workflow de l'intégration continue](/images/fiche-5-CI-workflow.svg)
 
 Voici le résumé sous forme de texte :
 1. Un développeur ou une développeuse crée une nouvelle feature branche à partir de la branche principale.
@@ -1665,7 +1665,7 @@ Voici le message d'erreur que vous devriez voir :
 
 ```txt
 eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0
-/builds/e-vinci/cae-projects/2025-cae-projects/cae-xy/frontend/src/components/pages/LoginPage.tsx
+/builds/e-vinci/cae-projects/2026-cae-projects/cae-xy/frontend/src/components/pages/LoginPage.tsx
   40:26  error  Replace `"primary.light"` with `'primary.light'`  prettier/prettier
 ✖ 1 problem (1 error, 0 warnings)
   1 error and 0 warnings potentially fixable with the `--fix` option.
