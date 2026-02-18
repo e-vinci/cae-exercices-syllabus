@@ -1227,7 +1227,7 @@ git pull
 git checkout -b chore/setup-api-boilerplate
 ```
 
-Pour l'ajout du boilerplate de votre API Spring, vous devez avoir fait tous les tutoriels qui sont demandés dans la page [Qualité de l'API](../quality/api).
+Pour l'ajout du boilerplate de votre API Spring, vous devez avoir fait toutes les étapes qui sont demandés dans la première partie de cette fiche.
 
 Le boilerplate de votre API Spring doit être ajouté à la racine de votre projet GitLab, dans un dossier nommé **`api`**.
 Si vous avez suivi les tutoriels, vous devriez avoir un projet Spring Boot avec les dépendances nécessaires pour démarrer votre API. En cas de souci, vous pouvez utiliser le dossier `api` fourni dans ce repository : [cae-project-boilerplate](https://github.com/e-vinci/cae-project-boilerplate).
@@ -1382,10 +1382,10 @@ Nous allons donc ajouter notre frontend React dans le pipeline et exécuter les 
 
 ### Ajout du boilerplate de votre frontend
 
-Pour l'ajout du boilerplate de votre frontend à votre projet GitLab, vous devez avoir fait tout ce qui est demandé dans la page [Qualité du Frontend](../quality/frontend).
-A la fin de ces tutoriels (le dernier s'appelle `unit-tests`), vous devriez avoir un projet React avec les dépendances nécessaires pour démarrer un frontend. Néanmoins, ce frontend n'intègre pas la librairie MUI.
+Pour l'ajout du boilerplate de votre frontend à votre projet GitLab, vous devez avoir fait tout ce qui est demandé dans la fiche précédente ([Fiche 4](../fiche-4/)).
+A la fin de la fiche 4 (le dernier projet s'appelle `unit-tests`), vous devriez avoir un projet React avec les dépendances nécessaires pour démarrer un frontend. Néanmoins, ce frontend n'intègre pas la librairie MUI.
 
-Pour vous aider, nous avons créé un boilerplate pour le frontend qui reprend les tutoriels précédents et qui intègre la librairie MUI. Vous pouvez le trouver ici : [frontend du cae-project-boilerplate](https://github.com/e-vinci/cae-project-boilerplate/tree/main/frontend).
+Dès lors, pour vous aider, nous avons créé un boilerplate pour le frontend qui reprend les tutoriels précédents et qui intègre la librairie MUI. Vous pouvez le trouver ici : [frontend du cae-project-boilerplate](https://github.com/e-vinci/cae-project-boilerplate/tree/main/frontend).
 
 Vous devriez créer une nouvelle branche à partir de la branche principale pour ajouter le boilerplate de votre frontend React dans un dossier nommé **`/frontend`**. Nous vous proposons d'appeler votre nouvelle branche `chore/setup-frontend-boilerplate`.
 
@@ -1561,5 +1561,5 @@ Faite un `commit` et un `push` sur votre branche `feature/update-login-page`.
 
 Cette fois-ci, le job `frontend test` devrait être exécuté avec succès ! 🎉
 
-Si nécessaire, vous pouvez trouver le code associé à l'intégration continue ici : [ci](https://github.com/e-vinci/cae-theory-demos/tree/main/ci).
+Si nécessaire, vous pouvez trouver le code associé à l'intégration continue ici : [ici](https://github.com/e-vinci/cae-theory-demos/tree/main/ci).
  
