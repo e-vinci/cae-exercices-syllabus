@@ -154,7 +154,7 @@ Au sein de **`<plugins>`** dans **`pom.xml`**, ajoutez la dépendance suivante :
       <dependency>
       <groupId>com.puppycrawl.tools</groupId>
       <artifactId>checkstyle</artifactId>
-      <version>10.20.0</version>
+      <version>13.2.0</version>
       </dependency>
    </dependencies>
 </plugin>
